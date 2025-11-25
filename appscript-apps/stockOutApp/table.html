@@ -1,0 +1,46 @@
+<div>
+  <title>Editable Table</title>
+  <script>
+      function deleteRow(button) {
+          // Find the row containing the button and remove it
+          const row = button.closest('tr');
+          row.remove();
+      }
+
+      function updateSerialNumbers() {
+        const rows = document.querySelectorAll('#table-body tr');
+        rows.forEach((row, index) => {
+            row.cells[0].textContent = index + 1;
+        });
+      }
+  </script>
+  <table id="edit-table" class="tableDetails">
+    <thead>
+        <tr>
+            <th>Design</th>
+            <th>Lot</th>
+            <th>Qty</th>
+        </tr>
+    </thead>
+    <tbody id="table-body">
+        <!-- Additional rows can be added here -->
+    </tbody>
+    
+  </table>
+  
+  <div class="tableDetails">
+    <input type="number" id="invoiceNumber" name="Invoice Number" placeholder="Invoice Number">
+  </div>
+
+  <div class="tableDetails">
+    <input type="file" accept="image/*" id="camInput" capture="environment">
+  </div>
+
+  <div id="preview" class="tableDetails">
+  </div>
+
+  <!-- Button handling functions are in js.html -->
+  <button onclick="handleTableClick(this)" class="tableDetails">Submit</button>
+  <button onclick="clearData()" class="tableDetails">Clear</button>
+
+</div>

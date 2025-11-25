@@ -1,0 +1,162 @@
+<style>
+  :root {
+    font-size: 40px; 
+  }
+
+  body {
+    font-family: sans-serif;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    /* width: 15rem; */
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem; 
+  }
+
+  h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    margin-bottom: 1rem;
+  }
+
+  img {
+    max-width: 100%;
+  }
+
+  button {
+    font-size: 1rem;
+  }
+
+  input {
+    font-size: 0.75rem;
+  }
+
+  /* Maintain horizontal slider on smaller screens */
+  .slider-container {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 1rem; 
+  }
+
+  .qr{
+    /* width: 15rem; */
+    align: center;
+  }
+
+  .card-container {
+    display: flex;
+    flex-direction: column; 
+    align-items: center; 
+  }
+
+  .card {
+    display: block; 
+    width: auto; /* Adjust as needed for smaller screens */
+    margin-right: 0;
+    margin-bottom: 0.5rem; 
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 1rem;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    vertical-align: top;
+  }
+
+  .card h2 {
+    /* margin: 0; */
+    font-size: 1.2rem;
+  }
+
+  .card th, td {
+    font-size: 0.75rem; 
+  }
+
+  .card p{
+    font-size: 1rem;
+  }
+
+  .card button{
+    font-size: 0.75rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    border: 1px solid #ddd;
+    padding: 0.5rem; 
+  }
+
+  /* Media query for larger screens (adjust breakpoint as needed) */
+  /* @media (min-width: 768px) { 
+    .card {
+      width: calc(33.33% - 20px); 
+      margin-right: 1rem;
+    }
+  } */
+
+  .tableDetails {
+    margin: 0.5rem;
+  }
+
+  /* ... (same CSS as before) ... */
+  #lightbox {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+  }
+
+  #lightbox-content {
+    background-color: #ff8b94;
+    margin: 15% auto;
+    padding: 1.5rem;
+    border: 0.3rem solid #888;
+    width: 80%;
+    max-width: 500px;
+    text-align: center;
+    font-size: 1rem;
+    color: #fefefe;
+  }
+
+  #success-lightbox {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+  }
+
+  #success-lightbox-content {
+    background-color: #a8e6cf;
+    margin: 15% auto;
+    padding: 1.5rem;
+    border: 0.3rem solid #888;
+    width: 80%;
+    max-width: 500px;
+    text-align: center;
+    font-size: 1rem;
+    color: #fefefe;
+  }
+</style>

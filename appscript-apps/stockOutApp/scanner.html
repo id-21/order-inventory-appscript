@@ -1,0 +1,55 @@
+<!--
+  This code uses the html5-qrcode library from GitHub: https://github.com/mebjas/html5-qrcode
+  Example Link: https://gist.github.com/mebjas/729c5397506a879ec704075c8a5284e8
+ -->
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" type="text/javascript">
+</script>
+
+<script>
+  function docReady(fn) {
+    // see if DOM is already available
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+      // call on next available tick
+      setTimeout(fn, 1);
+    } else {
+      document.addEventListener("DOMContentLoaded", fn);
+    }
+  } 
+
+  docReady(function() {
+    var resultContainer = document.getElementById('qr-reader-results');
+    var html5QrcodeScanner = new Html5QrcodeScanner(
+      "qr-reader", { fps: 10, qrbox: 250 });
+
+    var lastResult;
+    function onScanSuccess(decodedText, decodedResult) {
+      // decodedText: the exact text/data encoded in QR code
+      // decodedResult: the data passed by scanner, includes decodedText as a JSON attribute with other scan properties
+      if(decodedText === lastResult){
+        return;
+      }
+      lastResult = decodedText;
+      const temp = JSON.parse(decodedText);
+      console.log(temp)
+      google.script.run
+        .withSuccessHandler(function(result){
+            console.log("After processQRCode, in scanner.html: ", result);
+            if (result.success){
+              updateTable();
+            } else {
+              alert(result.error || result.message);
+            }
+        })
+        .processQRCode2(decodedText);
+      // console.log("In scanner.html, onScanSuccess: ", decodedText);
+      resultContainer.innerHTML = `<div>${temp.Design} - ${temp.Lot}</div>`;
+    }
+      
+    // Optional callback for error, can be ignored.
+    function onScanError(qrCodeError) {
+    }
+    
+    html5QrcodeScanner.render(onScanSuccess, onScanError);
+  });
+</script>

@@ -1,0 +1,62 @@
+<style>
+    html {
+      font-size: 32px;
+    }
+    body {
+      font-family: sans-serif;
+      margin: 1rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 0.3rem;
+      text-align: left;
+    }
+    input[type="text"], input[type="number"] {
+      width: calc(100% - 1rem); /* Account for padding */
+      padding: 0.2rem;
+      box-sizing: border-box;
+      margin: 0.5rem;
+      font-size: 1rem; /* Input font size */
+    }
+    button {
+      padding: 0.75rem 1rem; /* Use rem for padding */
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      font-size: 1rem; /* Button font size */
+      min-width: 5rem;
+    }
+    .remove-row {
+      background-color: #f44336;
+    }
+    /* ... (same CSS as before) ... */
+    #lightbox {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+
+    #lightbox-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 1.5rem;
+      border: 0.3rem solid #888;
+      width: 80%;
+      max-width: 500px;
+      text-align: center;
+      font-size: 1rem;
+    }
+  </style>

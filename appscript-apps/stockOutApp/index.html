@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; shrink-to-fit=yes">
+    <?!= include('style'); ?>
+  </head>
+
+  <body>
+    <div id="cards-section">
+      <div class="slider-container">
+        <div id="cards-container">
+        </div>
+      </div>
+      <?!= include('cards'); ?>
+    </div>
+    
+    <div id='qr-container' class = "qr" style = "display: none;" >
+      <div id="qr-reader" class = "qr"></div>
+      <div id="qr-reader-results" class = "qr"></div>
+      <?!= include('scanner'); ?>
+    </div>
+
+    <?!= include('table'); ?>
+    <?!= include('js'); ?>
+
+    <!-- <div class="test-section">
+      <input type="number" id="testOrderId" placeholder="Enter Order ID">
+      <button onclick="testUpdateOrderStatus()">Test Update Status</button>
+    </div> -->
+
+  </body>
+
+  <!-- <script>
+    function testUpdateOrderStatus() {
+      console.clear();
+      const orderId = Number(document.getElementById('testOrderId').value);
+
+      console.log("In index.html, type of orderID: ", typeof orderId);
+      google.script.run.withSuccessHandler(function(result) {
+        if (result) {
+          console.log("Order status updated successfully!");
+        } else {
+          console.log("Error updating order status.");
+        }
+      }).updateOrderStatus(orderId); 
+    }
+  </script> -->
+
+</html>

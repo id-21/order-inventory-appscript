@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Order Form</title>
+    <?!= include('style'); ?>
+  </head>
+  <body>
+    <h1>Order Details</h1>
+      <label for="orderNumber">Order Number:</label>
+      <input type="text" id="orderNumber"><br><br>
+
+      <label for="customerName">Customer Name:</label>
+      <input type="text" id="customerName"><br><br>
+
+    <table id="orderTable">
+      <thead>
+        <tr>
+          <th>Design</th>
+          <th>Qty</th>
+          <th>Lot</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr id="rowTemplate" style="display:none;">
+          <td><input type="text" class="design"></td>
+          <td><input type="number" class="qty"></td>
+          <td><input type="text" class="lot"></td>
+          <td><button class="remove-row">Remove</button></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="design"></td>
+          <td><input type="number" class="qty"></td>
+          <td><input type="text" class="lot"></td>
+          <td><button class="remove-row">Remove</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <button id="addRow">Add Row</button><br>
+    <button id="submitData">Submit Data</button>
+
+    <div id="lightbox">
+      <div id="lightbox-content">
+        <h2>Order Received!</h2>
+        <p>Thank you for your order.</p>
+        <button onclick="closeLightbox()">Close</button>
+      </div>
+    </div>
+
+
+    <script>
+      const addRowButton = document.getElementById('addRow');
+      const submitButton = document.getElementById('submitData');
+      const tableBody = document.querySelector('#orderTable tbody');
+      const rowTemplate = document.getElementById('rowTemplate');
+      const lightbox = document.getElementById('lightbox');
+
+      addRowButton.addEventListener('click', () => {
+        const newRow = rowTemplate.cloneNode(true);
+        newRow.style.display = '';
+        newRow.removeAttribute('id');
+        tableBody.appendChild(newRow);
+        // Event listener for remove button
+        newRow.querySelector('.remove-row').addEventListener('click', () => newRow.remove());
+      });
+
+      // Event listeners for remove buttons on initial rows
+      document.querySelectorAll('.remove-row').forEach(button => {
+          button.addEventListener('click', function() {
+              this.parentNode.parentNode.remove();
+          });
+      });
+
+      function openForm(formUrl) {
+        window.open(formUrl, '_blank');
+      }
+
+      // ... (same JavaScript as before, except the submitData function)
+      submitButton.addEventListener('click', () => {
+        // Check for empty fields
+        const submitButton = document.getElementById('submitData');
+        submitButton.setAttribute('disabled', '');
+        submitButton.style.backgroundColor = "red";
+        // document.getElementById('submitData').setAttribute('disabled', '');
+        // document.getElementById('submitData'),style.backgroundColor = "red";
+
+        const orderNumber = document.getElementById("orderNumber").value.trim();
+        const customerName = document.getElementById("customerName").value.trim();
+        let hasEmptyField = false;
+
+        if (orderNumber === "") {
+          hasEmptyField = true;
+          alert("Please enter an Order Number.");
+        }
+
+        if (customerName === "") {
+          hasEmptyField = true;
+          alert("Please enter a Customer Name.");
+        }
+
+        // Check each row in the table for empty Design or Quantity
+        const rows = tableBody.querySelectorAll('tr:not(#rowTemplate)');
+        rows.forEach(row => {
+          const design = row.querySelector('.design').value.trim();
+          const qty = row.querySelector('.qty').value.trim();
+          const lot = row.querySelector('.lot').value.trim();
+          if (design === "" || qty === "" || lot === "") {
+            hasEmptyField = true;
+            alert("Please fill in all Design, Quantity and Lot fields in the table.");
+            return; // Exit the loop if an empty field is found
+          }
+        });
+
+        if (hasEmptyField) {
+          return; // Don't submit if any field is empty
+        }
+        
+        // Aggregate data to submit
+        const data = [];
+        rows.forEach(row => {
+          data.push({
+            "Design": row.querySelector('.design').value.trim(),
+            "Qty": row.querySelector('.qty').value.trim(),
+            "Lot": row.querySelector('.lot').value.trim()
+          });
+        });
+        const orderInfo = {
+            "express": document.getElementById("orderNumber").value,
+            "customerName": document.getElementById("customerName").value,
+            "status": "PENDING",
+            "orderDetails": data
+        };
+        console.log('Data: ', data);
+        console.log("Order Info: ", orderInfo);
+        google.script.run.withSuccessHandler(showLightbox).submitOrder(JSON.stringify(orderInfo));
+      });
+
+      function showLightbox() {
+        lightbox.style.display = "block";
+        document.getElementById("orderNumber").value = "";
+        document.getElementById("customerName").value = "";
+        const tableBody = document.querySelector('#orderTable tbody');
+        const submitButton = document.getElementById('submitData');
+        tableBody.innerHTML = `<tr>
+          <td><input type="text" class="design"></td>
+          <td><input type="number" class="qty"></td>
+          <td><input type="text" class="lot"></td>
+          <td><button class="remove-row">Remove</button></td>
+        </tr>`;
+        document.querySelectorAll('.remove-row').forEach(button => {
+            button.addEventListener('click', function() {
+                this.parentNode.parentNode.remove();
+            });
+        });
+        submitButton.removeAttribute('disabled');
+        // document.getElementById('submitData').removeAttribute('disabled');
+        submitButton.style.backgroundColor = "green";
+        // document.getElementById('submitData'),style.backgroundColor = "green";
+      }
+
+      function closeLightbox() {
+        lightbox.style.display = "none";
+      }
+    </script>
+
+    <script>
+      const invoiceNumberInput = document.getElementById("orderNumber");
+      invoiceNumberInput.disabled = true;
+      google.script.run.withSuccessHandler(function(result) {
+        invoiceNumberInput.value = result;
+      }).getOrderId();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,132 @@
+<div id="success-lightbox">
+  <div id="success-lightbox-content">
+    <h2>Stock Entry Received!</h2>
+    <p>Thank you.</p>
+    <p>Refresh page to make a new entry. </p>
+    <!-- <button onclick="closeLightbox()">Close</button> -->
+  </div>
+</div>
+
+<div id="lightbox">
+  <div id="lightbox-content">
+    <h2>Uploading Stock Details...</h2>
+    <p>Please do not refresh the page. </p>
+    <p>This process takes roughly 15s. </p>
+    <!-- <button onclick="closeLightbox()">Close</button> -->
+  </div>
+</div>
+
+<script>
+  window.addEventListener("load", functionInit, true); 
+
+  let savedImage = null;
+  let imageFile;
+
+  //Initialize functions onload
+  function functionInit(){
+    console.log("In js.html, init has been run!");
+    // Prevent forms default behaviour (Prevent reloading the page)
+    function preventFormSubmit() {
+      var forms = document.querySelectorAll('form');
+      for (var i = 0; i < forms.length; i++) {
+        forms[i].addEventListener('submit', function(event) {
+        event.preventDefault();
+        });
+      }
+    } 
+    preventFormSubmit();
+  };
+
+  function updateTable() {
+    // console.log("Calling getScannedData from updateTable: scanner.html");
+    google.script.run.withSuccessHandler(displayData).getScannedData();
+
+    function displayData(data) {
+      // console.log("In js.html, Display Data!: ", data);
+      const tableBody = document.getElementById('table-body');
+      tableBody.innerHTML = ''; // Clear existing table rows
+
+      data.forEach(item => {
+        let row = tableBody.insertRow();
+        let designCell = row.insertCell();
+        let lotCell = row.insertCell();
+        let qtyCell = row.insertCell();
+        // let delButton = row.insertCell();
+        designCell.textContent = item.Design;
+        lotCell.textContent = item.Lot;
+        qtyCell.textContent = item.Qty;
+        // delButton.innerHTML = `<button onclick="deleteRow(this)">Remove</button>`;
+      });
+    }
+  }
+
+  const lightbox = document.getElementById('lightbox');
+  function showLightbox() {
+    lightbox.style.display = "block";
+  }
+  function closeLightbox(){
+    lightbox.style.display = "none";
+  }
+
+  const successLightbox = document.getElementById('success-lightbox');
+  function showSuccessLightbox() {
+    successLightbox.style.display = "block";
+  }
+
+  function handleTableClick(button) {
+    // Access the parent div of the button
+    const divElement = button.parentElement;
+    const invValue = Number(document.getElementById("invoiceNumber").value);
+    if(!invValue){
+      alert('Please insert invoice value!');
+      return;
+    }
+    if(!savedImage){
+      alert('Please insert image!');
+      return;
+    }
+    showLightbox();
+
+    google.script.run.withSuccessHandler(clearData).tableAndFile(invValue, imageFile);
+    
+    // Resetting Table and Form
+    document.getElementById("invoiceNumber").value='';
+    document.getElementById('preview').innerHTML = ``;
+    const camInput = document.getElementById('camInput');
+    camInput.value = ''; 
+    camInput.files = null; 
+    var resultContainer = document.getElementById('qr-reader-results');
+    resultContainer.innerHTML = ` `;
+    var tableBody = document.getElementById("table-body");
+    tableBody.innerHTML = ` `;
+  }
+
+  function clearData(){
+    // console.log("In js.html, clearData: ");
+    // alert("In clearData after success of tableAndFile");
+    closeLightbox();
+    showSuccessLightbox();
+    google.script.run.clearScannedData();
+    updateTable();
+  }
+
+  // Important part of code, is used by handleTableClick to send image data and shows preview too 
+  document.addEventListener('DOMContentLoaded', () => {
+    const camInput = document.getElementById('camInput');
+    const preview = document.getElementById('preview');
+    // Listen for file input changes
+    camInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        // Save the image file temporarily
+        savedImage = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          preview.innerHTML = `<img src="${e.target.result}" alt="Image Preview" style="max-width: 100%; height: auto;">`;
+          imageFile = reader.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  });
+</script>

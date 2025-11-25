@@ -1,0 +1,76 @@
+<script>
+  // Remember: google.script.run never returns any value. To use a value returned by it
+  // call the function you want to run using the returned value using withSuccessHandler
+  // https://stackoverflow.com/questions/46331964/google-script-run-is-returning-undefined-how-do-i-fix-it
+  google.script.run.withSuccessHandler(renderCards).getPendingOrders();
+  
+  // This function processes all orders in the Order Sheet and filters for "PENDING" orders
+  function renderCards([data, index]){
+    const cardsContainer = document.getElementById('cards-container');
+    
+    const card = document.createElement('div');
+    card.className = 'card';
+    let customCardHTML = `<h2>Custom Order</h2>`;
+    customCardHTML += `<button class="process-custom-order" onclick="processOrder(this, true)">Process Order</button>`;
+    card.innerHTML = customCardHTML;
+    cardsContainer.appendChild(card);
+
+    data.forEach((orderStr, i) => {
+      const order = JSON.parse(orderStr);
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      let cardHTML = `<h2>Order #${order.express}</h2><h2>${order.customerName}</h2><table><thead><tr><th>Design</th><th>Qty</th><th>Lot</th></tr></thead><tbody>`;
+      order.orderDetails.forEach(item => {
+        cardHTML += `<tr><td>${item.Design}</td><td>${item.Qty}</td><td>${item.Lot}</td></tr>`;});
+      cardHTML += `</tbody></table>`;
+      cardHTML += `<button class='process-order' data= '${orderStr}' express='${order.express}' onclick='processOrder(this, false)'>Process Order</button>`;
+
+      card.innerHTML = cardHTML;
+      cardsContainer.appendChild(card);
+    });
+  }
+
+  function processOrder(button, isCustomOrder) {
+    console.log("In cards.html, processOrder: ");
+    const cards = document.querySelectorAll('.card');
+    const currentCard = button.parentElement;
+    console.log("This card: ", currentCard);
+    // Hide all other cards and put a border around the selected card
+    cards.forEach(card => {
+      if (card !== currentCard) {
+        card.style.display = 'none';
+      } else {
+        card.style.border = '2px solid green';
+      }
+    });
+    // Display the QR Scanner
+    const qrScanner = document.getElementById('qr-container');
+    qrScanner.style.display = 'inline';
+
+    let orderStr = null;
+    let orderId = null;
+    let manual = isCustomOrder; 
+
+    if (!isCustomOrder) { 
+      orderId = button.getAttribute('express');
+      orderStr = button.getAttribute('data');
+    }
+
+    // Handle success or failure
+    google.script.run.withSuccessHandler(function(result) {
+      if (result.success) {
+        // console.log("Successfully added order details!");
+        // Populate and disable the invoiceNumber input field
+        if(!manual){
+          const invoiceNumberInput = document.getElementById('invoiceNumber');
+          invoiceNumberInput.value = orderId; 
+          invoiceNumberInput.disabled = true;
+        }
+      } else {
+        // console.log("In cards.html, after addOrderData, an error occured: ", result.error);
+        alert("In cards.html, after addOrderData, an error occured: ", result.error); 
+      }
+    }).addOrderData(orderStr, orderId, manual);
+  }
+</script>
