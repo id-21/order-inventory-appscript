@@ -7,6 +7,7 @@ import OrderCardSelector from "@/app/components/stock/OrderCardSelector";
 import QRScanner from "@/app/components/stock/QRScanner";
 import ScannedItemsTable from "@/app/components/stock/ScannedItemsTable";
 import ImageCapture from "@/app/components/stock/ImageCapture";
+import BottomSheet from "@/app/components/ui/BottomSheet";
 
 interface Order {
   id: string;
@@ -42,6 +43,7 @@ export default function StockOutClient() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [scanError, setScanError] = useState("");
+  const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
 
   useEffect(() => {
     // Generate session ID on mount
@@ -253,24 +255,23 @@ export default function StockOutClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4 px-3">
-      <div className="w-full">
+    <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-white">
+        <div className="container mx-auto max-w-2xl px-4 py-6">
+          {/* Error/Success Messages */}
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+              {error}
+            </div>
+          )}
 
-        {/* Error/Success Messages */}
-        {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-            {error}
-          </div>
-        )}
+          {success && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+              {success}
+            </div>
+          )}
 
-        {success && (
-          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
-            {success}
-          </div>
-        )}
-
-        {/* Step Content */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+          {/* Step Content */}
           {/* Step 1: Select Order */}
           {currentStep === "select_order" && (
             <div className="space-y-6">
@@ -279,16 +280,8 @@ export default function StockOutClient() {
               <OrderCardSelector
                 onOrderSelect={handleOrderSelect}
                 selectedOrderId={selectedOrder?.id || null}
+                onStartScanning={handleStartScanning}
               />
-
-              <div className="flex justify-end">
-                <button
-                  onClick={handleStartScanning}
-                  className="px-8 py-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-xl"
-                >
-                  Continue to Scanning
-                </button>
-              </div>
             </div>
           )}
 
@@ -296,11 +289,14 @@ export default function StockOutClient() {
           {currentStep === "scan_items" && (
             <div className="space-y-4">
               {selectedOrder && (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-lg text-blue-900">
+                <button
+                  onClick={() => setIsOrderDetailsOpen(true)}
+                  className="w-full p-4 bg-blue-50 border-2 border-blue-300 rounded-lg hover:bg-blue-100 transition-colors text-left"
+                >
+                  <p className="text-2xl font-bold text-blue-900">
                     Order #{selectedOrder.order_number} - {selectedOrder.customer_name}
                   </p>
-                </div>
+                </button>
               )}
 
               <QRScanner
@@ -335,6 +331,48 @@ export default function StockOutClient() {
                   ← Back to scanning
                 </button>
               </div>
+
+              {/* Bottom Sheet for Order Details in Scan Step */}
+              {selectedOrder && (
+                <BottomSheet
+                  isOpen={isOrderDetailsOpen}
+                  onClose={() => setIsOrderDetailsOpen(false)}
+                >
+                  <div className="space-y-6">
+                    {/* Customer Name as Heading */}
+                    <div>
+                      <h2 className="text-3xl font-bold text-gray-900">
+                        {selectedOrder.customer_name}
+                      </h2>
+                      <p className="text-sm text-gray-500 mt-1">
+                        #{selectedOrder.order_number}
+                      </p>
+                    </div>
+
+                    {/* Item Details - Packing Slip Style */}
+                    <div className="space-y-3 max-h-56 overflow-y-auto">
+                      {selectedOrder.order_items.map((item: any) => {
+                        const remaining = item.quantity - item.fulfilled_quantity;
+                        return (
+                          <div key={item.id}>
+                            <p className="text-2xl font-medium text-gray-900">
+                              {item.design}: {remaining} ({item.lot_number})
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Close Button */}
+                    <button
+                      onClick={() => setIsOrderDetailsOpen(false)}
+                      className="w-full px-8 py-6 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-bold text-2xl shadow-lg"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </BottomSheet>
+              )}
             </div>
           )}
 

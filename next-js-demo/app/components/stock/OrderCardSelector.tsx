@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import BottomSheet from "@/app/components/ui/BottomSheet";
 
 interface OrderItem {
   id: string;
@@ -23,15 +24,19 @@ interface Order {
 interface OrderCardSelectorProps {
   onOrderSelect: (order: Order | null) => void;
   selectedOrderId: string | null;
+  onStartScanning?: () => void;
 }
 
 export default function OrderCardSelector({
   onOrderSelect,
   selectedOrderId,
+  onStartScanning,
 }: OrderCardSelectorProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
+  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
 
   useEffect(() => {
     fetchPendingOrders();
@@ -53,15 +58,33 @@ export default function OrderCardSelector({
   };
 
   const handleOrderClick = (order: Order) => {
-    if (selectedOrderId === order.id) {
-      onOrderSelect(null);
-    } else {
-      onOrderSelect(order);
+    // Open bottom sheet to preview order details
+    setPreviewOrder(order);
+    setIsBottomSheetOpen(true);
+  };
+
+  const handleSelectAndStartScanning = () => {
+    if (previewOrder) {
+      onOrderSelect(previewOrder);
+      setIsBottomSheetOpen(false);
+      // Call the callback to start scanning
+      if (onStartScanning) {
+        onStartScanning();
+      }
     }
+  };
+
+  const handleCloseBottomSheet = () => {
+    setIsBottomSheetOpen(false);
+    setPreviewOrder(null);
   };
 
   const handleCustomOrder = () => {
     onOrderSelect(null);
+    // Auto-advance to scanning step
+    if (onStartScanning) {
+      onStartScanning();
+    }
   };
 
   if (loading) {
@@ -159,6 +182,45 @@ export default function OrderCardSelector({
           </div>
         </>
       )}
+
+      {/* Bottom Sheet for Order Details */}
+      <BottomSheet isOpen={isBottomSheetOpen} onClose={handleCloseBottomSheet}>
+        {previewOrder && (
+          <div className="space-y-6">
+            {/* Customer Name as Heading */}
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">
+                {previewOrder.customer_name}
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                #{previewOrder.order_number}
+              </p>
+            </div>
+
+            {/* Item Details - Packing Slip Style */}
+            <div className="space-y-3 max-h-56 overflow-y-auto">
+              {previewOrder.order_items.map((item) => {
+                const remaining = item.quantity - item.fulfilled_quantity;
+                return (
+                  <div key={item.id}>
+                    <p className="text-2xl font-medium text-gray-900">
+                      {item.design}: {remaining} ({item.lot_number})
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Start Scanning Button */}
+            <button
+              onClick={handleSelectAndStartScanning}
+              className="w-full px-8 py-6 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-bold text-2xl shadow-lg"
+            >
+              Start Scanning This Order
+            </button>
+          </div>
+        )}
+      </BottomSheet>
     </div>
   );
 }
