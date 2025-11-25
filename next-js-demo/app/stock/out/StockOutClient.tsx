@@ -8,6 +8,13 @@ import QRScanner from "@/app/components/stock/QRScanner";
 import ScannedItemsTable from "@/app/components/stock/ScannedItemsTable";
 import ImageCapture from "@/app/components/stock/ImageCapture";
 import BottomSheet from "@/app/components/ui/BottomSheet";
+import {
+  validateScan,
+  aggregateScannedItems,
+  type QRCodeData,
+  type ScannedItem,
+  type Order as ClientOrder,
+} from "@/lib/features/client-scan-validation";
 
 interface Order {
   id: string;
@@ -36,7 +43,8 @@ export default function StockOutClient() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [sessionId, setSessionId] = useState<string>("");
   const [isScanning, setIsScanning] = useState(false);
-  const [scannedItems, setScannedItems] = useState<AggregatedItem[]>([]);
+  const [scannedItems, setScannedItems] = useState<ScannedItem[]>([]);
+  const [aggregatedItems, setAggregatedItems] = useState<AggregatedItem[]>([]);
   const [capturedImage, setCapturedImage] = useState<string>("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [loading, setLoading] = useState(false);
@@ -66,21 +74,16 @@ export default function StockOutClient() {
     }
   };
 
+  // Update aggregated items whenever scanned items change
+  useEffect(() => {
+    const aggregated = aggregateScannedItems(scannedItems);
+    setAggregatedItems(aggregated);
+  }, [scannedItems]);
+
   const handleStartScanning = async () => {
     try {
       setError("");
-      // Initialize scan session
-      const response = await fetch("/api/stock/scan-session/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId,
-          orderId: selectedOrder?.id || null,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to start session");
-
+      // No need to call API - just start scanning locally
       setCurrentStep("scan_items");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to start session");
@@ -91,55 +94,44 @@ export default function StockOutClient() {
     try {
       setScanError("");
 
-      // Parse and validate QR code
-      let parsedData;
+      // Parse QR code
+      let parsedData: QRCodeData;
       try {
         parsedData = JSON.parse(qrCodeData);
       } catch (err) {
         setScanError("Invalid QR code format");
-        return;
-      }
-
-      // Send to API
-      const response = await fetch("/api/stock/scan-session/scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId,
-          qrData: parsedData,
-          orderId: selectedOrder?.id || null,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setScanError(data.error || "Failed to process scan");
-        // Play error sound
         playSound(false);
         return;
       }
 
-      // Success - play success sound and refresh items
+      // Validate locally (instant, no network round-trip!)
+      const validation = validateScan(
+        parsedData,
+        selectedOrder as ClientOrder | null,
+        scannedItems
+      );
+
+      if (!validation.valid) {
+        setScanError(validation.error || "Invalid QR code");
+        playSound(false);
+        return;
+      }
+
+      // Add to local state
+      const newItem: ScannedItem = {
+        design: parsedData.Design,
+        lot: parsedData.Lot,
+        uniqueIdentifier: parsedData["Unique Identifier"],
+        scannedAt: Date.now(),
+      };
+
+      setScannedItems((prev) => [...prev, newItem]);
+
+      // Success - play success sound
       playSound(true);
-      await fetchScannedItems();
     } catch (err) {
       setScanError(err instanceof Error ? err.message : "Failed to process scan");
       playSound(false);
-    }
-  };
-
-  const fetchScannedItems = async () => {
-    try {
-      const response = await fetch(
-        `/api/stock/scan-session/items?sessionId=${sessionId}`
-      );
-      if (!response.ok) throw new Error("Failed to fetch items");
-
-      const data = await response.json();
-      setScannedItems(data.items || []);
-    } catch (err) {
-      console.error("Error fetching scanned items:", err);
     }
   };
 
@@ -165,21 +157,12 @@ export default function StockOutClient() {
     oscillator.stop(audioContext.currentTime + 0.1);
   };
 
-  const handleClearSession = async () => {
-    if (
-      !confirm("Are you sure you want to clear all scanned items?")
-    )
-      return;
+  const handleClearSession = () => {
+    if (!confirm("Are you sure you want to clear all scanned items?")) return;
 
-    try {
-      await fetch(`/api/stock/scan-session/clear?sessionId=${sessionId}`, {
-        method: "DELETE",
-      });
-      setScannedItems([]);
-      setScanError("");
-    } catch (err) {
-      setError("Failed to clear session");
-    }
+    // Clear local state (no API call needed)
+    setScannedItems([]);
+    setScanError("");
   };
 
   const handleProceedToImage = () => {
@@ -210,7 +193,24 @@ export default function StockOutClient() {
     setSuccess("");
 
     try {
-      const response = await fetch("/api/stock/scan-session/submit", {
+      // Step 1: Save scanned items to database in a single batch
+      const batchResponse = await fetch("/api/stock/scan-session/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          orderId: selectedOrder?.id || null,
+          scannedItems,
+        }),
+      });
+
+      if (!batchResponse.ok) {
+        const batchData = await batchResponse.json();
+        throw new Error(batchData.error || "Failed to save scanned items");
+      }
+
+      // Step 2: Submit the stock movement
+      const submitResponse = await fetch("/api/stock/scan-session/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -222,13 +222,13 @@ export default function StockOutClient() {
         }),
       });
 
-      const data = await response.json();
+      const submitData = await submitResponse.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to submit");
+      if (!submitResponse.ok) {
+        throw new Error(submitData.error || "Failed to submit");
       }
 
-      setSuccess(data.message);
+      setSuccess(submitData.message);
 
       // Reset and redirect after success
       setTimeout(() => {
@@ -312,7 +312,7 @@ export default function StockOutClient() {
               )}
 
               <ScannedItemsTable
-                items={scannedItems}
+                items={aggregatedItems}
                 onClear={handleClearSession}
               />
 
@@ -439,7 +439,7 @@ export default function StockOutClient() {
               {/* Scanned Items Summary - Just count */}
               <div>
                 <p className="text-xl font-bold text-gray-900">
-                  {scannedItems.reduce((sum, item) => sum + item.quantity, 0)} items scanned across {scannedItems.length} design{scannedItems.length !== 1 ? 's' : ''}
+                  {scannedItems.length} items scanned across {aggregatedItems.length} design{aggregatedItems.length !== 1 ? 's' : ''}
                 </p>
               </div>
 

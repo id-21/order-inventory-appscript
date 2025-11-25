@@ -97,19 +97,27 @@ export default function QRScanner({
 
   return (
     <div className="space-y-4">
-      {error && cameras.length > 1 && (
-        <select
-          value={selectedCamera}
-          onChange={(e) => setSelectedCamera(e.target.value)}
-          disabled={isScanning}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
-        >
+      {cameras.length > 1 && (
+        <div className="grid grid-cols-2 gap-3">
           {cameras.map((camera) => (
-            <option key={camera.id} value={camera.id}>
-              {camera.label || `Camera ${camera.id}`}
-            </option>
+            <button
+              key={camera.id}
+              onClick={() => setSelectedCamera(camera.id)}
+              disabled={isScanning}
+              className={`px-6 py-4 rounded-lg font-medium text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                selectedCamera === camera.id
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+              }`}
+            >
+              {camera.label?.toLowerCase().includes("back")
+                ? "📷 Back"
+                : camera.label?.toLowerCase().includes("front")
+                ? "🤳 Front"
+                : `Camera ${cameras.indexOf(camera) + 1}`}
+            </button>
           ))}
-        </select>
+        </div>
       )}
 
       <button
