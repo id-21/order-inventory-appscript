@@ -4,6 +4,33 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { QRCodeData } from "@/lib/features/supabase-stock";
 
 /**
+ * Convert a date to IST (Indian Standard Time, UTC+5:30)
+ * Takes any date/time and converts it to IST timezone
+ */
+function toIST(date: Date | string): string {
+  const d = new Date(date);
+
+  // Convert to IST using toLocaleString to get proper IST time
+  const istString = d.toLocaleString("en-US", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
+  // Parse the formatted string and convert to ISO format for PostgreSQL
+  const [datePart, timePart] = istString.split(", ");
+  const [month, day, year] = datePart.split("/");
+  const formattedIST = `${year}-${month}-${day}T${timePart}+05:30`;
+
+  return formattedIST;
+}
+
+/**
  * POST /api/stock/scan-session/batch
  * Submit a batch of scanned items at once (after client-side validation)
  */
@@ -49,7 +76,7 @@ export async function POST(request: NextRequest) {
       lot_number: item.lot,
       unique_identifier: item.uniqueIdentifier,
       is_processed: false,
-      created_at: new Date(item.scannedAt).toISOString(),
+      scanned_at: toIST(item.scannedAt),
     }));
 
     // Batch insert all items

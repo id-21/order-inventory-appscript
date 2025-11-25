@@ -8,6 +8,7 @@ import QRScanner from "@/app/components/stock/QRScanner";
 import ScannedItemsTable from "@/app/components/stock/ScannedItemsTable";
 import ImageCapture from "@/app/components/stock/ImageCapture";
 import BottomSheet from "@/app/components/ui/BottomSheet";
+import DebugScanModal from "@/app/components/stock/DebugScanModal";
 import {
   validateScan,
   aggregateScannedItems,
@@ -52,6 +53,11 @@ export default function StockOutClient() {
   const [success, setSuccess] = useState("");
   const [scanError, setScanError] = useState("");
   const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
+  const [debugModalOpen, setDebugModalOpen] = useState(false);
+  const [debugData, setDebugData] = useState<{
+    qrData: QRCodeData | null;
+    validation: { valid: boolean; error?: string };
+  }>({ qrData: null, validation: { valid: false } });
 
   useEffect(() => {
     // Generate session ID on mount
@@ -111,17 +117,27 @@ export default function StockOutClient() {
         scannedItems
       );
 
+      // Open debug modal after every scan
+      setDebugData({
+        qrData: parsedData,
+        validation: {
+          valid: validation.valid,
+          error: validation.error,
+        },
+      });
+      setDebugModalOpen(true);
+
       if (!validation.valid) {
         setScanError(validation.error || "Invalid QR code");
         playSound(false);
         return;
       }
 
-      // Add to local state
+      // Add to local state (convert all to strings to ensure consistency)
       const newItem: ScannedItem = {
-        design: parsedData.Design,
-        lot: parsedData.Lot,
-        uniqueIdentifier: parsedData["Unique Identifier"],
+        design: String(parsedData.Design),
+        lot: String(parsedData.Lot),
+        uniqueIdentifier: String(parsedData["Unique Identifier"]),
         scannedAt: Date.now(),
       };
 
@@ -373,6 +389,15 @@ export default function StockOutClient() {
                   </div>
                 </BottomSheet>
               )}
+
+              {/* Debug Modal */}
+              <DebugScanModal
+                isOpen={debugModalOpen}
+                onClose={() => setDebugModalOpen(false)}
+                qrData={debugData.qrData}
+                order={selectedOrder}
+                validationResult={debugData.validation}
+              />
             </div>
           )}
 

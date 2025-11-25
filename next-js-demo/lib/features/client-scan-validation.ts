@@ -68,15 +68,19 @@ export function validateQRCodeAgainstOrder(
     return { valid: true };
   }
 
+  // Convert to strings for comparison to handle type mismatches
+  const qrDesign = String(qrData.Design);
+  const qrLot = String(qrData.Lot);
+
   // Check if Design + Lot combination exists in order
   const matchingItem = order.order_items.find(
-    (item) => item.design === qrData.Design && item.lot_number === qrData.Lot
+    (item) => String(item.design) === qrDesign && String(item.lot_number) === qrLot
   );
 
   if (!matchingItem) {
     return {
       valid: false,
-      error: `Item ${qrData.Design} (Lot: ${qrData.Lot}) is not in this order`,
+      error: `Item ${qrDesign} (Lot: ${qrLot}) is not in this order`,
     };
   }
 
@@ -90,14 +94,17 @@ export function checkDuplicateScan(
   qrData: QRCodeData,
   scannedItems: ScannedItem[]
 ): ValidationResult {
+  // Convert to string for comparison
+  const qrUniqueId = String(qrData["Unique Identifier"]);
+
   const isDuplicate = scannedItems.some(
-    (item) => item.uniqueIdentifier === qrData["Unique Identifier"]
+    (item) => String(item.uniqueIdentifier) === qrUniqueId
   );
 
   if (isDuplicate) {
     return {
       valid: false,
-      error: `Item ${qrData["Unique Identifier"]} has already been scanned`,
+      error: `Item ${qrUniqueId} has already been scanned`,
       duplicate: true,
     };
   }
@@ -118,8 +125,12 @@ export function checkQuantityLimit(
     return { valid: true, current: 0, max: 0 };
   }
 
+  // Convert to strings for comparison
+  const qrDesign = String(qrData.Design);
+  const qrLot = String(qrData.Lot);
+
   const matchingItem = order.order_items.find(
-    (item) => item.design === qrData.Design && item.lot_number === qrData.Lot
+    (item) => String(item.design) === qrDesign && String(item.lot_number) === qrLot
   );
 
   if (!matchingItem) {
@@ -133,7 +144,7 @@ export function checkQuantityLimit(
 
   // Count current scans for this Design + Lot
   const currentCount = scannedItems.filter(
-    (item) => item.design === qrData.Design && item.lot === qrData.Lot
+    (item) => String(item.design) === qrDesign && String(item.lot) === qrLot
   ).length;
 
   const maxQuantity = matchingItem.quantity - matchingItem.fulfilled_quantity;
@@ -141,7 +152,7 @@ export function checkQuantityLimit(
   if (currentCount >= maxQuantity) {
     return {
       valid: false,
-      error: `Quantity limit reached for ${qrData.Design}. Max: ${maxQuantity}, Current: ${currentCount}`,
+      error: `Quantity limit reached for ${qrDesign}. Max: ${maxQuantity}, Current: ${currentCount}`,
       quantityExceeded: true,
       current: currentCount,
       max: maxQuantity,
