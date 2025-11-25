@@ -83,14 +83,6 @@ export default function OrderCardSelector({
 
   return (
     <div>
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Select Order
-        </h3>
-        <p className="text-sm text-gray-600">
-          Choose an order to scan items, or continue with custom order
-        </p>
-      </div>
 
       {orders.length === 0 ? (
         <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg text-center">
@@ -104,7 +96,7 @@ export default function OrderCardSelector({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 gap-4 mb-6">
             {orders.map((order) => {
               const isSelected = selectedOrderId === order.id;
               const totalItems = order.order_items.reduce(
@@ -115,56 +107,38 @@ export default function OrderCardSelector({
                 (sum, item) => sum + item.fulfilled_quantity,
                 0
               );
+              const remainingItems = totalItems - fulfilledItems;
 
               return (
                 <button
                   key={order.id}
                   onClick={() => handleOrderClick(order)}
-                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                  className={`p-6 rounded-lg border-2 transition-all text-left ${
                     isSelected
                       ? "border-blue-500 bg-blue-50 shadow-lg"
                       : "border-gray-200 bg-white hover:border-blue-300 hover:shadow-md"
                   }`}
                 >
-                  <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h4 className="font-bold text-lg text-gray-900">
+                      <h4 className="font-bold text-3xl text-gray-900">
                         Order #{order.order_number}
                       </h4>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-lg text-gray-600 mt-1">
                         {order.customer_name}
                       </p>
                     </div>
                     {isSelected && (
-                      <span className="px-2 py-1 bg-blue-500 text-white text-xs rounded-full">
+                      <span className="px-3 py-1 bg-blue-500 text-white text-base rounded-full">
                         Selected
                       </span>
                     )}
                   </div>
 
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Total Items:</span>
-                      <span className="font-medium">{totalItems}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Fulfilled:</span>
-                      <span className="font-medium text-green-600">
-                        {fulfilledItems}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Remaining:</span>
-                      <span className="font-medium text-orange-600">
-                        {totalItems - fulfilledItems}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <p className="text-xs text-gray-500">
-                      {order.order_items.length} line item(s)
-                    </p>
+                  <div className="mt-4">
+                    <span className="inline-block px-4 py-2 bg-orange-100 text-orange-600 font-bold text-2xl rounded-lg">
+                      Remaining: {remainingItems}
+                    </span>
                   </div>
                 </button>
               );
@@ -174,14 +148,13 @@ export default function OrderCardSelector({
           <div className="flex justify-center">
             <button
               onClick={handleCustomOrder}
-              className={`px-6 py-3 rounded-lg border-2 transition-colors font-medium ${
+              className={`w-full px-8 py-6 rounded-lg border-2 transition-colors font-medium text-xl ${
                 selectedOrderId === null
                   ? "border-blue-500 bg-blue-50 text-blue-700"
                   : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
               }`}
             >
-              {selectedOrderId === null ? "✓ " : ""}Continue without Order
-              (Custom)
+              Continue without Order (Custom)
             </button>
           </div>
         </>

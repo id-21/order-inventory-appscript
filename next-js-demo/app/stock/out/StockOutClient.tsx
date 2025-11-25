@@ -253,68 +253,8 @@ export default function StockOutClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Stock Out</h1>
-          <p className="text-gray-600 mt-1">
-            Scan QR codes to track inventory outflow
-          </p>
-        </div>
-
-        {/* Progress Steps */}
-        <div className="mb-8 bg-white rounded-lg shadow-md p-4">
-          <div className="flex items-center justify-between">
-            {[
-              { step: "select_order", label: "Select Order", icon: "📋" },
-              { step: "scan_items", label: "Scan Items", icon: "📱" },
-              { step: "capture_image", label: "Capture Image", icon: "📷" },
-              { step: "submit", label: "Submit", icon: "✓" },
-            ].map((item, index) => {
-              const isActive = currentStep === item.step;
-              const isPast =
-                ["select_order", "scan_items", "capture_image", "submit"].indexOf(
-                  currentStep
-                ) >
-                ["select_order", "scan_items", "capture_image", "submit"].indexOf(
-                  item.step as StepType
-                );
-
-              return (
-                <div key={item.step} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center flex-1">
-                    <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center text-xl ${
-                        isActive
-                          ? "bg-blue-500 text-white"
-                          : isPast
-                          ? "bg-green-500 text-white"
-                          : "bg-gray-200 text-gray-600"
-                      }`}
-                    >
-                      {item.icon}
-                    </div>
-                    <p
-                      className={`text-xs mt-2 ${
-                        isActive ? "font-semibold" : ""
-                      }`}
-                    >
-                      {item.label}
-                    </p>
-                  </div>
-                  {index < 3 && (
-                    <div
-                      className={`h-1 flex-1 ${
-                        isPast ? "bg-green-500" : "bg-gray-200"
-                      }`}
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+    <div className="min-h-screen bg-gray-50 py-4 px-3">
+      <div className="w-full">
 
         {/* Error/Success Messages */}
         {error && (
@@ -334,6 +274,8 @@ export default function StockOutClient() {
           {/* Step 1: Select Order */}
           {currentStep === "select_order" && (
             <div className="space-y-6">
+              <h1 className="text-4xl font-bold text-gray-900 mb-6">Select Order</h1>
+
               <OrderCardSelector
                 onOrderSelect={handleOrderSelect}
                 selectedOrderId={selectedOrder?.id || null}
@@ -342,9 +284,9 @@ export default function StockOutClient() {
               <div className="flex justify-end">
                 <button
                   onClick={handleStartScanning}
-                  className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                  className="px-8 py-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-xl"
                 >
-                  Continue to Scanning →
+                  Continue to Scanning
                 </button>
               </div>
             </div>
@@ -352,14 +294,11 @@ export default function StockOutClient() {
 
           {/* Step 2: Scan Items */}
           {currentStep === "scan_items" && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {selectedOrder && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h3 className="font-medium text-blue-900">
-                    Scanning for Order #{selectedOrder.order_number}
-                  </h3>
-                  <p className="text-sm text-blue-700">
-                    Customer: {selectedOrder.customer_name}
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-lg text-blue-900">
+                    Order #{selectedOrder.order_number} - {selectedOrder.customer_name}
                   </p>
                 </div>
               )}
@@ -371,7 +310,7 @@ export default function StockOutClient() {
               />
 
               {scanError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-lg font-medium">
                   {scanError}
                 </div>
               )}
@@ -381,19 +320,19 @@ export default function StockOutClient() {
                 onClear={handleClearSession}
               />
 
-              <div className="flex gap-3">
-                <button
-                  onClick={handleBackToOrders}
-                  className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                >
-                  ← Back
-                </button>
+              <div className="flex flex-col gap-3">
                 <button
                   onClick={handleProceedToImage}
                   disabled={scannedItems.length === 0}
-                  className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                  className="w-full px-8 py-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-xl"
                 >
-                  Continue to Image →
+                  Continue
+                </button>
+                <button
+                  onClick={handleBackToOrders}
+                  className="text-center text-base text-gray-600 hover:text-gray-800"
+                >
+                  ← Back to scanning
                 </button>
               </div>
             </div>
@@ -407,18 +346,24 @@ export default function StockOutClient() {
                 capturedImage={capturedImage}
               />
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setCurrentStep("scan_items")}
-                  className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                >
-                  ← Back
-                </button>
+              <div className="flex flex-col gap-3">
                 <button
                   onClick={handleProceedToSubmit}
-                  className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                  disabled={!capturedImage}
+                  className="w-full px-8 py-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-xl"
                 >
-                  Continue to Submit →
+                  Continue
+                </button>
+                {!capturedImage && (
+                  <p className="text-center text-base text-red-600 font-medium">
+                    Photo is required. Please capture or upload an image.
+                  </p>
+                )}
+                <button
+                  onClick={() => setCurrentStep("scan_items")}
+                  className="text-center text-base text-gray-600 hover:text-gray-800"
+                >
+                  ← Back
                 </button>
               </div>
             </div>
@@ -427,81 +372,65 @@ export default function StockOutClient() {
           {/* Step 4: Submit */}
           {currentStep === "submit" && (
             <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Review and Submit
-                </h3>
-              </div>
+              <h3 className="text-3xl font-bold text-gray-900">Submit</h3>
 
-              {/* Order Info */}
+              {/* Order Info - Compact */}
               {selectedOrder ? (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="font-medium text-blue-900">
-                    Order #{selectedOrder.order_number}
-                  </h4>
-                  <p className="text-sm text-blue-700">
-                    Customer: {selectedOrder.customer_name}
-                  </p>
-                </div>
+                <p className="text-lg text-blue-900">
+                  Order #{selectedOrder.order_number} - {selectedOrder.customer_name}
+                </p>
               ) : (
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <h4 className="font-medium text-yellow-900">Custom Order</h4>
-                  <p className="text-sm text-yellow-700">
-                    No order associated with this stock movement
-                  </p>
-                </div>
+                <p className="text-lg text-yellow-900">Custom Order</p>
               )}
 
               {/* Invoice Number */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-lg font-medium text-gray-700 mb-2">
                   Invoice Number <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={invoiceNumber}
                   onChange={(e) => setInvoiceNumber(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter invoice number"
+                  className="w-full px-6 py-4 text-xl border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Invoice Number"
                   disabled={loading}
                 />
               </div>
 
-              {/* Scanned Items Summary */}
-              <ScannedItemsTable
-                items={scannedItems}
-                onClear={handleClearSession}
-              />
+              {/* Scanned Items Summary - Just count */}
+              <div>
+                <p className="text-xl font-bold text-gray-900">
+                  {scannedItems.reduce((sum, item) => sum + item.quantity, 0)} items scanned across {scannedItems.length} design{scannedItems.length !== 1 ? 's' : ''}
+                </p>
+              </div>
 
-              {/* Image Preview */}
+              {/* Image Preview - Smaller */}
               {capturedImage && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">
-                    Captured Image:
-                  </h4>
                   <img
                     src={capturedImage}
                     alt="Proof of shipment"
-                    className="w-full max-w-md rounded-lg border-2 border-gray-300"
+                    className="w-full max-w-sm rounded-lg border-2 border-gray-300"
                   />
                 </div>
               )}
 
               {/* Submit Buttons */}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setCurrentStep("capture_image")}
-                  disabled={loading}
-                  className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors font-medium"
-                >
-                  ← Back
-                </button>
+              <div className="flex flex-col gap-3">
                 <button
                   onClick={handleSubmit}
                   disabled={loading || !invoiceNumber.trim()}
-                  className="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-lg"
+                  className="w-full px-8 py-6 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-2xl"
                 >
                   {loading ? "Submitting..." : "Submit Stock Movement"}
+                </button>
+                <button
+                  onClick={() => setCurrentStep("capture_image")}
+                  disabled={loading}
+                  className="text-center text-base text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                >
+                  ← Back to scanning
                 </button>
               </div>
             </div>

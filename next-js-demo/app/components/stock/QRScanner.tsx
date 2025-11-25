@@ -56,7 +56,7 @@ export default function QRScanner({
         selectedCamera,
         {
           fps: 10,
-          qrbox: { width: 250, height: 250 },
+          qrbox: { width: 320, height: 320 },
         },
         (decodedText) => {
           onScan(decodedText);
@@ -97,37 +97,35 @@ export default function QRScanner({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-3">
-        {cameras.length > 1 && (
-          <select
-            value={selectedCamera}
-            onChange={(e) => setSelectedCamera(e.target.value)}
-            disabled={isScanning}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
-          >
-            {cameras.map((camera) => (
-              <option key={camera.id} value={camera.id}>
-                {camera.label || `Camera ${camera.id}`}
-              </option>
-            ))}
-          </select>
-        )}
-
-        <button
-          onClick={handleToggleScanning}
-          disabled={!selectedCamera}
-          className={`px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-            isScanning
-              ? "bg-red-500 text-white hover:bg-red-600"
-              : "bg-green-500 text-white hover:bg-green-600"
-          }`}
+      {error && cameras.length > 1 && (
+        <select
+          value={selectedCamera}
+          onChange={(e) => setSelectedCamera(e.target.value)}
+          disabled={isScanning}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
         >
-          {isScanning ? "Stop Scanner" : "Start Scanner"}
-        </button>
-      </div>
+          {cameras.map((camera) => (
+            <option key={camera.id} value={camera.id}>
+              {camera.label || `Camera ${camera.id}`}
+            </option>
+          ))}
+        </select>
+      )}
+
+      <button
+        onClick={handleToggleScanning}
+        disabled={!selectedCamera}
+        className={`w-full px-8 py-5 rounded-lg font-medium text-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+          isScanning
+            ? "bg-red-500 text-white hover:bg-red-600"
+            : "bg-green-500 text-white hover:bg-green-600"
+        }`}
+      >
+        {isScanning ? "Stop Scanner" : "Start Scanner"}
+      </button>
 
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-lg font-medium">
           {error}
         </div>
       )}
@@ -137,23 +135,8 @@ export default function QRScanner({
         className={`w-full rounded-lg overflow-hidden border-2 ${
           isScanning ? "border-green-500" : "border-gray-300"
         }`}
-        style={{ minHeight: "300px" }}
+        style={{ minHeight: "60vh" }}
       />
-
-      {!isScanning && (
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h4 className="font-medium text-blue-900 mb-2">
-            QR Code Scanning Tips:
-          </h4>
-          <ul className="text-sm text-blue-800 space-y-1">
-            <li>• Click "Start Scanner" to begin</li>
-            <li>• Hold QR code steady in the frame</li>
-            <li>• Ensure good lighting</li>
-            <li>• Keep QR code clean and undamaged</li>
-            <li>• Scanner will beep on successful scan</li>
-          </ul>
-        </div>
-      )}
     </div>
   );
 }
