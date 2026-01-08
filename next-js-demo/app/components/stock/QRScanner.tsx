@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 
 interface QRScannerProps {
-  onScan: (data: string) => void;
+  onScan: (data: string, scanner: Html5Qrcode) => void;
   isScanning: boolean;
   onScanningChange: (scanning: boolean) => void;
 }
@@ -59,7 +59,9 @@ export default function QRScanner({
           qrbox: { width: 320, height: 320 },
         },
         (decodedText) => {
-          onScan(decodedText);
+          if (scannerRef.current) {
+            onScan(decodedText, scannerRef.current);
+          }
         },
         (errorMessage) => {
           // Ignore scan errors (these happen constantly while scanning)

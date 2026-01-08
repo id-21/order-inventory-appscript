@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
+import { Html5Qrcode } from "html5-qrcode";
 import OrderCardSelector from "@/app/components/stock/OrderCardSelector";
 import QRScanner from "@/app/components/stock/QRScanner";
 import ScannedItemsTable from "@/app/components/stock/ScannedItemsTable";
@@ -96,8 +97,11 @@ export default function StockOutClient() {
     }
   };
 
-  const handleScan = async (qrCodeData: string) => {
+  const handleScan = async (qrCodeData: string, scanner: Html5Qrcode) => {
     try {
+      // Pause scanner immediately to prevent duplicate scans
+      scanner.pause();
+
       setScanError("");
 
       // Parse QR code
@@ -118,14 +122,14 @@ export default function StockOutClient() {
       );
 
       // Open debug modal after every scan
-      // setDebugData({
-      //   qrData: parsedData,
-      //   validation: {
-      //     valid: validation.valid,
-      //     error: validation.error,
-      //   },
-      // });
-      // setDebugModalOpen(true);
+      setDebugData({
+        qrData: parsedData,
+        validation: {
+          valid: validation.valid,
+          error: validation.error,
+        },
+      });
+      setDebugModalOpen(true);
 
       if (!validation.valid) {
         setScanError(validation.error || "Invalid QR code");
@@ -148,6 +152,9 @@ export default function StockOutClient() {
     } catch (err) {
       setScanError(err instanceof Error ? err.message : "Failed to process scan");
       playSound(false);
+    } finally {
+      // Always resume scanning after processing, even if there was an error
+      scanner.resume();
     }
   };
 
