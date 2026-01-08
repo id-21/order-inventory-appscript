@@ -13,7 +13,13 @@
     "type": "git",
     "url": "git+https://github.com/id-21/redesigned-chainsaw.git"
   },
-  "keywords": ["order-management", "inventory", "qr-scanner", "nextjs", "supabase"],
+  "keywords": [
+    "order-management",
+    "inventory",
+    "qr-scanner",
+    "nextjs",
+    "supabase"
+  ],
   "author": "",
   "license": "ISC",
   "bugs": {
@@ -21,7 +27,7 @@
   },
   "homepage": "https://github.com/id-21/redesigned-chainsaw#readme",
   "dependencies": {
-    "@clerk/nextjs": "^6.35.2",
+    "@clerk/nextjs": "^6.36.6",
     "@supabase/supabase-js": "^2.84.0",
     "date-fns": "^4.1.0",
     "html5-qrcode": "^2.3.8",
@@ -36,8 +42,9 @@
     "@types/react": "^19.2.6",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.22",
+    "baseline-browser-mapping": "^2.9.12",
     "eslint": "^9.39.1",
-    "eslint-config-next": "^16.0.10",
+    "eslint-config-next": "^16.0.3",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3"
