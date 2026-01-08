@@ -17,7 +17,7 @@ export default function ImageCapture({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
 
-  const startCamera = async () => {
+  const startCamera = async (retryCount = 0) => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
@@ -29,6 +29,14 @@ export default function ImageCapture({
       setUseCamera(true);
     } catch (err) {
       console.error("Error accessing camera:", err);
+
+      // Retry once after 500ms if first attempt fails (camera might still be releasing)
+      if (retryCount === 0) {
+        console.log("Retrying camera access in 500ms...");
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return startCamera(1);
+      }
+
       alert("Failed to access camera. Please check permissions.");
     }
   };
@@ -135,7 +143,7 @@ export default function ImageCapture({
           ) : (
             <div className="grid grid-cols-1 gap-4">
               <button
-                onClick={startCamera}
+                onClick={() => startCamera()}
                 className="py-8 bg-blue-50 border-2 border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
               >
                 <div className="font-medium text-blue-900 text-xl">Take Photo</div>

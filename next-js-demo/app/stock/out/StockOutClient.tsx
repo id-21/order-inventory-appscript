@@ -118,14 +118,14 @@ export default function StockOutClient() {
       );
 
       // Open debug modal after every scan
-      setDebugData({
-        qrData: parsedData,
-        validation: {
-          valid: validation.valid,
-          error: validation.error,
-        },
-      });
-      setDebugModalOpen(true);
+      // setDebugData({
+      //   qrData: parsedData,
+      //   validation: {
+      //     valid: validation.valid,
+      //     error: validation.error,
+      //   },
+      // });
+      // setDebugModalOpen(true);
 
       if (!validation.valid) {
         setScanError(validation.error || "Invalid QR code");
@@ -181,11 +181,20 @@ export default function StockOutClient() {
     setScanError("");
   };
 
-  const handleProceedToImage = () => {
+  const handleProceedToImage = async () => {
     if (scannedItems.length === 0) {
       setError("Please scan at least one item");
       return;
     }
+
+    // Stop scanning to release camera
+    if (isScanning) {
+      setIsScanning(false);
+    }
+
+    // Wait for camera to be fully released before transitioning
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     setCurrentStep("capture_image");
   };
 
