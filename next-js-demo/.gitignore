@@ -2,6 +2,7 @@
 node_modules/
 /.pnp
 .pnp.js
+html5-qrcode-docs/
 
 # Testing
 /coverage
