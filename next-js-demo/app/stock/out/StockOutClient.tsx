@@ -62,11 +62,18 @@ export default function StockOutClient() {
 
   // Use ref instead of state for synchronous blocking of duplicate scans
   const isProcessingScanRef = useRef(false);
+  // Use ref to track current scanned items (avoids stale closure in validation)
+  const scannedItemsRef = useRef<ScannedItem[]>([]);
 
   useEffect(() => {
     // Generate session ID on mount
     setSessionId(uuidv4());
   }, []);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    scannedItemsRef.current = scannedItems;
+  }, [scannedItems]);
 
   useEffect(() => {
     // If order number is in URL, try to load that order
@@ -132,11 +139,19 @@ export default function StockOutClient() {
       }
 
       // Validate locally (instant, no network round-trip!)
+      // Use ref to get current items (avoids stale closure)
+      console.log(`[${timestamp}] [${timeMs}ms] Validating scan...`);
+      console.log(`[${timestamp}] [${timeMs}ms] Unique Identifier:`, parsedData["Unique Identifier"]);
+      console.log(`[${timestamp}] [${timeMs}ms] Current scanned items count:`, scannedItemsRef.current.length);
+      console.log(`[${timestamp}] [${timeMs}ms] Existing identifiers:`, scannedItemsRef.current.map(i => i.uniqueIdentifier));
+
       const validation = validateScan(
         parsedData,
         selectedOrder as ClientOrder | null,
-        scannedItems
+        scannedItemsRef.current  // Use ref instead of state to avoid stale closure
       );
+
+      console.log(`[${timestamp}] [${timeMs}ms] Validation result:`, validation.valid ? 'PASS' : `FAIL - ${validation.error}`);
 
       // Open debug modal after every scan
       setDebugData({
@@ -162,7 +177,11 @@ export default function StockOutClient() {
         scannedAt: Date.now(),
       };
 
-      setScannedItems((prev) => [...prev, newItem]);
+      setScannedItems((prev) => {
+        const updated = [...prev, newItem];
+        console.log(`[${timestamp}] [${timeMs}ms] Items array updated. New count:`, updated.length);
+        return updated;
+      });
 
       // Success - play success sound
       playSound(true);
@@ -432,6 +451,7 @@ export default function StockOutClient() {
                 qrData={debugData.qrData}
                 order={selectedOrder}
                 validationResult={debugData.validation}
+                scannedItems={scannedItems}
               />
             </div>
           )}

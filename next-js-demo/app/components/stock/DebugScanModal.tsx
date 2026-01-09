@@ -1,6 +1,6 @@
 "use client";
 
-import { QRCodeData } from "@/lib/features/client-scan-validation";
+import { QRCodeData, ScannedItem } from "@/lib/features/client-scan-validation";
 
 interface DebugScanModalProps {
   isOpen: boolean;
@@ -11,6 +11,7 @@ interface DebugScanModalProps {
     valid: boolean;
     error?: string;
   };
+  scannedItems: ScannedItem[];
 }
 
 export default function DebugScanModal({
@@ -19,6 +20,7 @@ export default function DebugScanModal({
   qrData,
   order,
   validationResult,
+  scannedItems,
 }: DebugScanModalProps) {
   if (!isOpen || !qrData) return null;
 
@@ -26,6 +28,13 @@ export default function DebugScanModal({
     if (value === null) return "null";
     if (value === undefined) return "undefined";
     return typeof value;
+  };
+
+  // Calculate how many items have been scanned in this session for a specific design+lot
+  const getScannedCount = (design: string, lot: string) => {
+    return scannedItems.filter(
+      (item) => String(item.design) === String(design) && String(item.lot) === String(lot)
+    ).length;
   };
 
   const findClosestMatch = () => {
@@ -271,7 +280,10 @@ export default function DebugScanModal({
                       </div>
                       <div>
                         Quantity: {item.quantity} / Fulfilled:{" "}
-                        {item.fulfilled_quantity}
+                        {item.fulfilled_quantity} / Scanned this session:{" "}
+                        <span className="font-bold text-blue-600">
+                          {getScannedCount(item.design, item.lot_number)}
+                        </span>
                       </div>
                     </div>
                   ))}
