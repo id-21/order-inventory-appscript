@@ -122,9 +122,6 @@ export async function getOrders(filters?: {
     )
     .order("created_at", { ascending: false });
 
-  if (filters?.userId) {
-    query = query.eq("created_by", filters.userId);
-  }
 
   if (filters?.status) {
     query = query.eq("status", filters.status);

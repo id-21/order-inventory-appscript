@@ -21,7 +21,6 @@ export async function GET(request: NextRequest) {
     const offset = searchParams.get("offset");
 
     const movements = await getStockMovements({
-      userId,
       orderId: orderId || undefined,
       status: status || undefined,
       limit: limit ? parseInt(limit) : undefined,

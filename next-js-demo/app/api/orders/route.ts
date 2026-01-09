@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
     const offset = searchParams.get("offset");
 
     const orders = await getOrders({
-      userId,
       status: status || undefined,
       customerName: customerName || undefined,
       limit: limit ? parseInt(limit) : undefined,
