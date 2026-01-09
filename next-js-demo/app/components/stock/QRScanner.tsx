@@ -56,7 +56,7 @@ export default function QRScanner({
         selectedCamera,
         {
           fps: 10,
-          qrbox: { width: 320, height: 320 },
+          qrbox: { width: 280, height: 280 },
         },
         (decodedText) => {
           const timestamp = new Date().toISOString();
@@ -104,40 +104,45 @@ export default function QRScanner({
 
   return (
     <div className="space-y-4">
-      {cameras.length > 1 && (
-        <div className="grid grid-cols-2 gap-3">
-          {cameras.map((camera) => (
-            <button
-              key={camera.id}
-              onClick={() => setSelectedCamera(camera.id)}
-              disabled={isScanning}
-              className={`px-6 py-4 rounded-lg font-medium text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                selectedCamera === camera.id
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-              }`}
-            >
-              {camera.label?.toLowerCase().includes("back")
-                ? "📷 Back"
-                : camera.label?.toLowerCase().includes("front")
-                ? "🤳 Front"
-                : `Camera ${cameras.indexOf(camera) + 1}`}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Single row with camera buttons on left, scanner button on right */}
+      <div className="flex gap-2 items-stretch">
+        {/* Camera buttons on the left */}
+        {cameras.length > 1 && (
+          <div className="flex gap-2">
+            {cameras.map((camera) => (
+              <button
+                key={camera.id}
+                onClick={() => setSelectedCamera(camera.id)}
+                disabled={isScanning}
+                className={`px-1 py-0.5 rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                  selectedCamera === camera.id
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                }`}
+              >
+                {camera.label?.toLowerCase().includes("back")
+                  ? "📷 Back"
+                  : camera.label?.toLowerCase().includes("front")
+                  ? "🤳 Front"
+                  : `Camera ${cameras.indexOf(camera) + 1}`}
+              </button>
+            ))}
+          </div>
+        )}
 
-      <button
-        onClick={handleToggleScanning}
-        disabled={!selectedCamera}
-        className={`w-full px-8 py-5 rounded-lg font-medium text-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-          isScanning
-            ? "bg-red-500 text-white hover:bg-red-600"
-            : "bg-green-500 text-white hover:bg-green-600"
-        }`}
-      >
-        {isScanning ? "Stop Scanner" : "Start Scanner"}
-      </button>
+        {/* Start/Stop Scanner button on the right */}
+        <button
+          onClick={handleToggleScanning}
+          disabled={!selectedCamera}
+          className={`flex-1 px-6 py-1 rounded-lg font-medium text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            isScanning
+              ? "bg-red-500 text-white hover:bg-red-600"
+              : "bg-green-500 text-white hover:bg-green-600"
+          }`}
+        >
+          {isScanning ? "Stop Scanner" : "Start Scanner"}
+        </button>
+      </div>
 
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-lg font-medium">
@@ -150,7 +155,7 @@ export default function QRScanner({
         className={`w-full rounded-lg overflow-hidden border-2 ${
           isScanning ? "border-green-500" : "border-gray-300"
         }`}
-        style={{ minHeight: "60vh" }}
+        style={{ minHeight: "50vh" }}
       />
     </div>
   );
