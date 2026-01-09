@@ -176,7 +176,7 @@ export default function StockOutClient() {
           error: validation.error,
         },
       });
-      setDebugModalOpen(true);
+      setDebugModalOpen(false);
 
       if (!validation.valid) {
         setScanError(validation.error || "Invalid QR code");
