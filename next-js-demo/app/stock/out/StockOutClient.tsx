@@ -614,23 +614,38 @@ export default function StockOutClient() {
                     <table className="w-full">
                       <thead className="bg-gray-100">
                         <tr>
-                          <th className="px-4 py-3 text-left text-base font-bold text-gray-700">Design</th>
+                          <th className="px-4 py-3 text-left text-base font-bold text-gray-700">SKU</th>
                           <th className="px-4 py-3 text-left text-base font-bold text-gray-700">Lot</th>
-                          <th className="px-4 py-3 text-right text-base font-bold text-gray-700">Qty</th>
-                          <th className="px-4 py-3 text-right text-base font-bold text-gray-700">Fulfilled</th>
-                          <th className="px-4 py-3 text-right text-base font-bold text-gray-700">Remaining</th>
+                          <th className="px-4 py-3 text-center text-base font-bold text-gray-700">Qty</th>
+                          <th className="px-4 py-3 text-center text-base font-bold text-gray-700">Fulfilled</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
                         {selectedOrder.order_items.map((item: any) => {
-                          const remaining = item.quantity - item.fulfilled_quantity;
+                          // Check if this exact design+lot was scanned with matching quantity
+                          const scannedMatch = aggregatedItems.find(
+                            (scanned) =>
+                              String(scanned.design) === String(item.design) &&
+                              String(scanned.lot) === String(item.lot_number)
+                          );
+                          const isFulfilled = scannedMatch && scannedMatch.quantity === item.quantity;
+
                           return (
                             <tr key={item.id} className="hover:bg-gray-50">
                               <td className="px-4 py-3 text-lg font-medium text-gray-900">{item.design}</td>
                               <td className="px-4 py-3 text-lg text-gray-700">{item.lot_number}</td>
-                              <td className="px-4 py-3 text-lg text-gray-900 text-right">{item.quantity}</td>
-                              <td className="px-4 py-3 text-lg text-gray-700 text-right">{item.fulfilled_quantity}</td>
-                              <td className="px-4 py-3 text-lg font-bold text-blue-900 text-right">{remaining}</td>
+                              <td className="px-4 py-3 text-lg text-gray-900 text-center">
+                                <span className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full font-bold">
+                                  {item.quantity}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                {isFulfilled ? (
+                                  <span className="text-3xl text-green-600">✓</span>
+                                ) : (
+                                  <span className="text-3xl text-red-600">✗</span>
+                                )}
+                              </td>
                             </tr>
                           );
                         })}
