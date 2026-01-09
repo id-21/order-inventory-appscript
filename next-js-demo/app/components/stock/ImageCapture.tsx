@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface ImageCaptureProps {
   onImageCapture: (base64Image: string) => void;
@@ -17,14 +17,21 @@ export default function ImageCapture({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
 
+  // FIX: This waits for the video element to exist, then connects the stream
+  useEffect(() => {
+    if (useCamera && videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [useCamera, stream]);
+
   const startCamera = async (retryCount = 0) => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
       });
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
+      
+      // Removed the broken code here. The useEffect handles the connection now.
+      
       setStream(mediaStream);
       setUseCamera(true);
     } catch (err) {
