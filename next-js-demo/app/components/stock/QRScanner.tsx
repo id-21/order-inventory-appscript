@@ -18,6 +18,7 @@ export default function QRScanner({
   const [error, setError] = useState("");
   const [cameras, setCameras] = useState<any[]>([]);
   const [selectedCamera, setSelectedCamera] = useState<string>("");
+  const [shouldAutostart, setShouldAutostart] = useState(false);
 
   useEffect(() => {
     // Get available cameras
@@ -30,6 +31,12 @@ export default function QRScanner({
             device.label.toLowerCase().includes("back")
           );
           setSelectedCamera(backCamera?.id || devices[0].id);
+
+          const backCameras = devices.filter((device) =>
+            device.label.toLowerCase().includes("back")
+          );
+          const autostart = devices.length === 1 || backCameras.length === 1;
+          setShouldAutostart(autostart);
         }
       })
       .catch((err) => {
@@ -52,6 +59,12 @@ export default function QRScanner({
       stopScanning();
     }
   }, [isScanning]);
+
+  useEffect(() => {
+    if (shouldAutostart && selectedCamera && !isScanning) {
+      startScanning();
+    }
+  }, [shouldAutostart, selectedCamera]);
 
   const startScanning = async () => {
     if (!selectedCamera) {
