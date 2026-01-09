@@ -53,7 +53,9 @@ Example: `ScannedItemsTable.tsx:19`
 
 - **QR Scanner Camera Release** - Always call `stopScanning()` in cleanup (useEffect return) to prevent "device in use" errors. Camera retry logic handles race conditions: `ImageCapture.tsx:33-38`
 
-- **Type Coercion in Validation** - QR codes may have numeric fields but order data uses strings. Always use String() coercion for comparisons. Debug modal shows type mismatches: `DebugScanModal.tsx:25-29`
+- **Type Coercion in Validation** - QR codes may have numeric fields but order data uses strings. Always use String() coercion for comparisons. Debug modal shows type mismatches: `DebugScanModal.tsx:27-31`
+
+- **DebugScanModal Shows Session Count** - Modal now accepts `scannedItems` prop and displays real-time scan count for current session alongside database fulfilled_quantity. Helps distinguish between already-fulfilled items vs current session scans: `DebugScanModal.tsx:14`, `DebugScanModal.tsx:273-287`
 
 - **Admin Link Hidden** - `AdminHeaderLink` is conditionally commented out in `AuthHeader.tsx:5,16`. Uncomment when admin dashboard is ready.
 
