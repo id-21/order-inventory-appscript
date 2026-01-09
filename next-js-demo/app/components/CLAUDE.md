@@ -24,10 +24,11 @@ All components use `"use client"` directive for interactivity (refs, state, effe
 Example: `QRScanner.tsx`, search:`"use client"`
 
 **Camera Handling Pattern**
-Camera components implement retry logic and proper stream cleanup:
-- `startCamera()` retries once after 500ms if first attempt fails
+Camera components must properly connect MediaStream to video elements using React lifecycle:
+- Use `useEffect` to connect stream AFTER video element renders (critical for conditional rendering)
+- Implement retry logic: `startCamera()` retries once after 500ms if first attempt fails
 - `stopCamera()` releases all media tracks before unmounting
-Example: `ImageCapture.tsx:20-42`, `QRScanner.tsx:45-88`
+Example: `ImageCapture.tsx:21-25` (useEffect pattern), `ImageCapture.tsx:27-48` (retry logic)
 
 **Bottom Sheet Integration**
 Complex selection UIs use BottomSheet for mobile-optimized previews:
@@ -51,7 +52,9 @@ Example: `ScannedItemsTable.tsx:19`
 <critical_notes>
 ## CRITICAL NOTES
 
-- **QR Scanner Camera Release** - Always call `stopScanning()` in cleanup (useEffect return) to prevent "device in use" errors. Camera retry logic handles race conditions: `ImageCapture.tsx:33-38`
+- **Camera Stream Connection Lifecycle** - CRITICAL: When video elements are conditionally rendered, you MUST use useEffect to connect the MediaStream after the element exists in DOM. Setting `videoRef.current.srcObject` directly in an async function will fail silently if called before `setUseCamera(true)` causes the element to render. See `ImageCapture.tsx:21-25` for the correct pattern.
+
+- **QR Scanner Camera Release** - Always call `stopScanning()` in cleanup (useEffect return) to prevent "device in use" errors. QRScanner component watches `isScanning` prop and automatically stops when it becomes false: `QRScanner.tsx:49-54`
 
 - **Type Coercion in Validation** - QR codes may have numeric fields but order data uses strings. Always use String() coercion for comparisons. Debug modal shows type mismatches: `DebugScanModal.tsx:27-31`
 
@@ -77,10 +80,18 @@ Example: `ScannedItemsTable.tsx:19`
 5. Show errors in red-50 bg with red-700 text (see `QRScanner.tsx:135-138`)
 
 **Camera Component Requirements**
-1. Implement retry logic for camera access (500ms delay, 1 retry)
-2. Clean up streams in useEffect cleanup function
-3. Use environment facingMode for back camera: `{ video: { facingMode: "environment" } }`
-4. Handle permissions errors gracefully with user-friendly messages
+1. **CRITICAL**: Use useEffect to connect stream to video element when both exist:
+   ```javascript
+   useEffect(() => {
+     if (useCamera && videoRef.current && stream) {
+       videoRef.current.srcObject = stream;
+     }
+   }, [useCamera, stream]);
+   ```
+2. Implement retry logic for camera access (500ms delay, 1 retry)
+3. Clean up streams in useEffect cleanup function
+4. Use environment facingMode for back camera: `{ video: { facingMode: "environment" } }`
+5. Handle permissions errors gracefully with user-friendly messages
 
 **Integrating with Order Validation**
 - Import validation from `@/lib/features/client-scan-validation`

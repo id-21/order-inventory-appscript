@@ -53,10 +53,11 @@ StockOutClient captures detailed logs in memory for debugging and audit:
 Example: `out/StockOutClient.tsx:78-83`, `out/StockOutClient.tsx:246-277`
 
 **Camera Release Before Transition**
-Stop scanner and wait 500ms before advancing to image capture step:
+Stop scanner before advancing to image capture step by setting `isScanning` to false:
+- QRScanner component watches `isScanning` prop and stops automatically when false
+- Wait period (1000ms) provides buffer for camera cleanup (can be adjusted if needed)
 - Prevents "device in use" errors when ImageCapture tries to access camera
-- Ensures proper MediaStream cleanup
-Example: `out/StockOutClient.tsx:282-299`, search:`handleProceedToImage`
+Example: `out/StockOutClient.tsx:282-301`, search:`handleProceedToImage`
 
 **Batch Submit Pattern**
 Submit happens in 2 API calls:
@@ -77,7 +78,7 @@ Example: `history/page.tsx:71-78`, search:`groupedMovements`
 
 - **Session ID Persistence** - Generated once on mount using uuidv4(), persists across all steps. Reset only when starting new workflow: `out/StockOutClient.tsx:70-75`, `out/StockOutClient.tsx:383-394`
 
-- **Camera Timing Critical** - MUST wait 500ms after stopping scanner before advancing to image capture. Failure causes "NotReadableError: device in use": `out/StockOutClient.tsx:296`
+- **Camera Transition Pattern** - Set `isScanning` to false before advancing to image capture step. The QRScanner component automatically stops when this prop changes. A wait period helps ensure cleanup completes: `out/StockOutClient.tsx:290-298`
 
 - **Session Logs Download** - "Download Session Logs" button available on scan/image/submit steps. Logs include session ID, all scan events, validation results, API calls, performance timing. Exports as .txt file for debugging scan issues: `out/StockOutClient.tsx:246-277`, `out/StockOutClient.tsx:440-448`
 
