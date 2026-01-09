@@ -64,11 +64,23 @@ export default function StockOutClient() {
   const isProcessingScanRef = useRef(false);
   // Use ref to track current scanned items (avoids stale closure in validation)
   const scannedItemsRef = useRef<ScannedItem[]>([]);
+  // Use ref to capture logs for download
+  const logsRef = useRef<string[]>([]);
 
   useEffect(() => {
     // Generate session ID on mount
-    setSessionId(uuidv4());
+    const newSessionId = uuidv4();
+    setSessionId(newSessionId);
+    addLog(`Session started with ID: ${newSessionId}`);
   }, []);
+
+  // Helper function to add logs
+  const addLog = (message: string) => {
+    const timestamp = new Date().toISOString();
+    const logEntry = `[${timestamp}] ${message}`;
+    logsRef.current.push(logEntry);
+    console.log(logEntry);
+  };
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -85,8 +97,10 @@ export default function StockOutClient() {
   const handleOrderSelect = async (order: Order | null) => {
     setSelectedOrder(order);
     if (order) {
+      addLog(`Order selected: #${order.order_number} - ${order.customer_name}`);
       setInvoiceNumber(order.order_number.toString());
     } else {
+      addLog('Custom order mode selected (no order)');
       setInvoiceNumber("");
     }
   };
@@ -100,6 +114,7 @@ export default function StockOutClient() {
   const handleStartScanning = async () => {
     try {
       setError("");
+      addLog('Starting scan session');
       // No need to call API - just start scanning locally
       setCurrentStep("scan_items");
     } catch (err) {
@@ -108,13 +123,12 @@ export default function StockOutClient() {
   };
 
   const handleScan = async (qrCodeData: string, scanner: Html5Qrcode) => {
-    const timestamp = new Date().toISOString();
     const timeMs = performance.now().toFixed(2);
-    console.log(`[${timestamp}] [${timeMs}ms] Scan received`);
+    addLog(`[${timeMs}ms] Scan received`);
 
     // Prevent processing if already handling a scan (use ref for synchronous check)
     if (isProcessingScanRef.current) {
-      console.log(`[${timestamp}] [${timeMs}ms] Already processing a scan, ignoring duplicate...`);
+      addLog(`[${timeMs}ms] Already processing a scan, ignoring duplicate...`);
       return;
     }
 
@@ -123,7 +137,7 @@ export default function StockOutClient() {
       isProcessingScanRef.current = true;
 
       // Pause scanner immediately to prevent duplicate scans
-      console.log(`[${timestamp}] [${timeMs}ms] Pausing scanner to process scan...`);
+      addLog(`[${timeMs}ms] Pausing scanner to process scan...`);
       scanner.pause();
 
       setScanError("");
@@ -133,6 +147,7 @@ export default function StockOutClient() {
       try {
         parsedData = JSON.parse(qrCodeData);
       } catch (err) {
+        addLog(`[${timeMs}ms] Invalid QR code format`);
         setScanError("Invalid QR code format");
         playSound(false);
         return;
@@ -140,10 +155,10 @@ export default function StockOutClient() {
 
       // Validate locally (instant, no network round-trip!)
       // Use ref to get current items (avoids stale closure)
-      console.log(`[${timestamp}] [${timeMs}ms] Validating scan...`);
-      console.log(`[${timestamp}] [${timeMs}ms] Unique Identifier:`, parsedData["Unique Identifier"]);
-      console.log(`[${timestamp}] [${timeMs}ms] Current scanned items count:`, scannedItemsRef.current.length);
-      console.log(`[${timestamp}] [${timeMs}ms] Existing identifiers:`, scannedItemsRef.current.map(i => i.uniqueIdentifier));
+      addLog(`[${timeMs}ms] Validating scan...`);
+      addLog(`[${timeMs}ms] Unique Identifier: ${parsedData["Unique Identifier"]}`);
+      addLog(`[${timeMs}ms] Current scanned items count: ${scannedItemsRef.current.length}`);
+      addLog(`[${timeMs}ms] Existing identifiers: ${scannedItemsRef.current.map(i => i.uniqueIdentifier).join(', ')}`);
 
       const validation = validateScan(
         parsedData,
@@ -151,7 +166,7 @@ export default function StockOutClient() {
         scannedItemsRef.current  // Use ref instead of state to avoid stale closure
       );
 
-      console.log(`[${timestamp}] [${timeMs}ms] Validation result:`, validation.valid ? 'PASS' : `FAIL - ${validation.error}`);
+      addLog(`[${timeMs}ms] Validation result: ${validation.valid ? 'PASS' : `FAIL - ${validation.error}`}`);
 
       // Open debug modal after every scan
       setDebugData({
@@ -179,18 +194,22 @@ export default function StockOutClient() {
 
       setScannedItems((prev) => {
         const updated = [...prev, newItem];
-        console.log(`[${timestamp}] [${timeMs}ms] Items array updated. New count:`, updated.length);
+        addLog(`[${timeMs}ms] Items array updated. New count: ${updated.length}`);
         return updated;
       });
 
       // Success - play success sound
+      addLog(`[${timeMs}ms] Scan successful - Design: ${parsedData.Design}, Lot: ${parsedData.Lot}`);
       playSound(true);
     } catch (err) {
-      setScanError(err instanceof Error ? err.message : "Failed to process scan");
+      const errorMsg = err instanceof Error ? err.message : "Failed to process scan";
+      addLog(`[${timeMs}ms] Error processing scan: ${errorMsg}`);
+      setScanError(errorMsg);
       playSound(false);
     } finally {
       // Always resume scanning after processing, even if there was an error
       scanner.resume();
+      addLog(`[${timeMs}ms] Scanner resumed`);
       // Reset processing flag to allow next scan (synchronous!)
       isProcessingScanRef.current = false;
     }
@@ -222,8 +241,42 @@ export default function StockOutClient() {
     if (!confirm("Are you sure you want to clear all scanned items?")) return;
 
     // Clear local state (no API call needed)
+    addLog(`Clearing ${scannedItems.length} scanned items`);
     setScannedItems([]);
     setScanError("");
+  };
+
+  const handleDownloadLogs = () => {
+    try {
+      // Add session summary to logs
+      const summary = [
+        "=== SESSION SUMMARY ===",
+        `Session ID: ${sessionId}`,
+        `Order: ${selectedOrder ? `#${selectedOrder.order_number} - ${selectedOrder.customer_name}` : 'Custom'}`,
+        `Total Items Scanned: ${scannedItems.length}`,
+        `Current Step: ${currentStep}`,
+        `Timestamp: ${new Date().toISOString()}`,
+        "=== DETAILED LOGS ===",
+        ...logsRef.current
+      ];
+
+      const logContent = summary.join('\n');
+      const blob = new Blob([logContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `scan-session-${sessionId}-${new Date().toISOString().replace(/:/g, '-')}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addLog('Logs downloaded successfully');
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to download logs';
+      addLog(`Error downloading logs: ${errorMsg}`);
+      setError(errorMsg);
+    }
   };
 
   const handleProceedToImage = async () => {
@@ -231,6 +284,8 @@ export default function StockOutClient() {
       setError("Please scan at least one item");
       return;
     }
+
+    addLog(`Proceeding to image capture with ${scannedItems.length} scanned items`);
 
     // Stop scanning to release camera
     if (isScanning) {
@@ -244,6 +299,7 @@ export default function StockOutClient() {
   };
 
   const handleProceedToSubmit = () => {
+    addLog('Proceeding to submit step');
     setCurrentStep("submit");
   };
 
@@ -258,12 +314,14 @@ export default function StockOutClient() {
       return;
     }
 
+    addLog(`Submitting stock movement - Invoice: ${invoiceNumber}, Items: ${scannedItems.length}`);
     setLoading(true);
     setError("");
     setSuccess("");
 
     try {
       // Step 1: Save scanned items to database in a single batch
+      addLog('Sending batch request to save scanned items...');
       const batchResponse = await fetch("/api/stock/scan-session/batch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -276,10 +334,13 @@ export default function StockOutClient() {
 
       if (!batchResponse.ok) {
         const batchData = await batchResponse.json();
+        addLog(`Batch request failed: ${batchData.error}`);
         throw new Error(batchData.error || "Failed to save scanned items");
       }
+      addLog('Batch request successful');
 
       // Step 2: Submit the stock movement
+      addLog('Sending submit request...');
       const submitResponse = await fetch("/api/stock/scan-session/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -295,9 +356,11 @@ export default function StockOutClient() {
       const submitData = await submitResponse.json();
 
       if (!submitResponse.ok) {
+        addLog(`Submit request failed: ${submitData.error}`);
         throw new Error(submitData.error || "Failed to submit");
       }
 
+      addLog('Submit successful! Stock movement created.');
       setSuccess(submitData.message);
 
       // Reset and redirect after success
@@ -309,19 +372,25 @@ export default function StockOutClient() {
         }
       }, 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit");
+      const errorMsg = err instanceof Error ? err.message : "Failed to submit";
+      addLog(`Submit error: ${errorMsg}`);
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
   const handleBackToOrders = () => {
+    addLog('Resetting workflow - returning to order selection');
     setCurrentStep("select_order");
     setSelectedOrder(null);
     setScannedItems([]);
     setCapturedImage("");
     setInvoiceNumber("");
-    setSessionId(uuidv4());
+    const newSessionId = uuidv4();
+    setSessionId(newSessionId);
+    // Reset logs for new session
+    logsRef.current = [`[${new Date().toISOString()}] New session started with ID: ${newSessionId}`];
   };
 
   return (
@@ -387,6 +456,15 @@ export default function StockOutClient() {
               />
 
               <div className="flex flex-col gap-3">
+                <button
+                  onClick={handleDownloadLogs}
+                  className="w-full px-6 py-3 bg-gray-100 text-gray-700 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors font-medium text-lg flex items-center justify-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                  Download Session Logs
+                </button>
                 <button
                   onClick={handleProceedToImage}
                   disabled={scannedItems.length === 0}
@@ -466,6 +544,15 @@ export default function StockOutClient() {
 
               <div className="flex flex-col gap-3">
                 <button
+                  onClick={handleDownloadLogs}
+                  className="w-full px-6 py-3 bg-gray-100 text-gray-700 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors font-medium text-lg flex items-center justify-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                  Download Session Logs
+                </button>
+                <button
                   onClick={handleProceedToSubmit}
                   disabled={!capturedImage}
                   className="w-full px-8 py-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-xl"
@@ -536,6 +623,16 @@ export default function StockOutClient() {
 
               {/* Submit Buttons */}
               <div className="flex flex-col gap-3">
+                <button
+                  onClick={handleDownloadLogs}
+                  disabled={loading}
+                  className="w-full px-6 py-3 bg-gray-100 text-gray-700 border-2 border-gray-300 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors font-medium text-lg flex items-center justify-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                  Download Session Logs
+                </button>
                 <button
                   onClick={handleSubmit}
                   disabled={loading || !invoiceNumber.trim()}
