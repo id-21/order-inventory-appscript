@@ -287,14 +287,17 @@ export default function StockOutClient() {
 
     addLog(`Proceeding to image capture with ${scannedItems.length} scanned items`);
 
-    // Stop scanning to release camera
+    // Stop scanning to release camera by setting isScanning to false
     if (isScanning) {
+      addLog('Stopping scanner...');
       setIsScanning(false);
     }
 
     // Wait for camera to be fully released before transitioning
-    await new Promise(resolve => setTimeout(resolve, 500));
+    addLog('Waiting 1000ms for camera release...');
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
+    addLog('Transitioning to image capture step');
     setCurrentStep("capture_image");
   };
 

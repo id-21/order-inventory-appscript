@@ -38,9 +38,20 @@ export default function QRScanner({
       });
 
     return () => {
-      stopScanning();
+      // Cleanup on unmount
+      if (scannerRef.current) {
+        scannerRef.current.stop().catch(console.error);
+      }
     };
   }, []);
+
+  // Watch isScanning prop and stop scanner when it becomes false
+  useEffect(() => {
+    if (!isScanning && scannerRef.current) {
+      console.log('[QRScanner] isScanning changed to false, stopping scanner...');
+      stopScanning();
+    }
+  }, [isScanning]);
 
   const startScanning = async () => {
     if (!selectedCamera) {
@@ -82,14 +93,17 @@ export default function QRScanner({
   };
 
   const stopScanning = async () => {
-    if (scannerRef.current && isScanning) {
+    if (scannerRef.current) {
       try {
+        console.log('[QRScanner] Calling stop() on Html5Qrcode...');
         await scannerRef.current.stop();
+        console.log('[QRScanner] Clearing scanner instance...');
         scannerRef.current.clear();
         scannerRef.current = null;
+        console.log('[QRScanner] Scanner fully stopped');
         onScanningChange(false);
       } catch (err) {
-        console.error("Error stopping scanner:", err);
+        console.error("[QRScanner] Error stopping scanner:", err);
       }
     }
   };
