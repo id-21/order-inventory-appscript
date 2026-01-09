@@ -610,17 +610,17 @@ export default function StockOutClient() {
               {selectedOrder && selectedOrder.order_items.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-xl font-bold text-gray-900">Order Items</h4>
-                  <div className="bg-white border-2 border-gray-300 rounded-lg overflow-hidden">
-                    <table className="w-full">
-                      <thead className="bg-gray-100">
+                  <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
-                          <th className="px-4 py-3 text-left text-base font-bold text-gray-700">SKU</th>
-                          <th className="px-4 py-3 text-left text-base font-bold text-gray-700">Lot</th>
-                          <th className="px-4 py-3 text-center text-base font-bold text-gray-700">Qty</th>
-                          <th className="px-4 py-3 text-center text-base font-bold text-gray-700">Fulfilled</th>
+                          <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-700">SKU</th>
+                          <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-700">Lot</th>
+                          <th className="px-2 py-1.5 text-center text-xs font-semibold text-gray-700">Qty</th>
+                          <th className="px-2 py-1.5 text-center text-xs font-semibold text-gray-700">Fulfilled</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-200">
+                      <tbody className="bg-white divide-y divide-gray-100">
                         {selectedOrder.order_items.map((item: any) => {
                           // Check if this exact design+lot was scanned with matching quantity
                           const scannedMatch = aggregatedItems.find(
@@ -632,18 +632,18 @@ export default function StockOutClient() {
 
                           return (
                             <tr key={item.id} className="hover:bg-gray-50">
-                              <td className="px-4 py-3 text-lg font-medium text-gray-900">{item.design}</td>
-                              <td className="px-4 py-3 text-lg text-gray-700">{item.lot_number}</td>
-                              <td className="px-4 py-3 text-lg text-gray-900 text-center">
-                                <span className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full font-bold">
+                              <td className="px-2 py-1.5 text-xs font-medium text-gray-900">{item.design}</td>
+                              <td className="px-2 py-1.5 text-xs text-gray-700">{item.lot_number}</td>
+                              <td className="px-2 py-1.5 text-center">
+                                <span className="inline-flex items-center justify-center px-2 py-0.5 bg-green-100 text-green-700 font-bold text-xs rounded">
                                   {item.quantity}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-center">
+                              <td className="px-2 py-1.5 text-center">
                                 {isFulfilled ? (
-                                  <span className="text-3xl text-green-600">✓</span>
+                                  <span className="text-xl text-green-600">✓</span>
                                 ) : (
-                                  <span className="text-3xl text-red-600">✗</span>
+                                  <span className="text-xl text-red-600">✗</span>
                                 )}
                               </td>
                             </tr>

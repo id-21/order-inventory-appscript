@@ -1,0 +1,558 @@
+[
+  {
+    "table_name": "order_items",
+    "columns": [
+      {
+        "column": "id",
+        "type": "text",
+        "nullable": "NO",
+        "default": "(gen_random_uuid())::text"
+      },
+      {
+        "column": "order_id",
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "design",
+        "type": "character varying",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "quantity",
+        "type": "integer",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "lot_number",
+        "type": "character varying",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "fulfilled_quantity",
+        "type": "integer",
+        "nullable": "YES",
+        "default": "0"
+      },
+      {
+        "column": "status",
+        "type": "character varying",
+        "nullable": "NO",
+        "default": "'PENDING'::character varying"
+      },
+      {
+        "column": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": "now()"
+      }
+    ],
+    "relationships": [
+      {
+        "from": "order_id",
+        "to_table": "orders",
+        "to_column": "id"
+      }
+    ]
+  },
+  {
+    "table_name": "orders",
+    "columns": [
+      {
+        "column": "id",
+        "type": "text",
+        "nullable": "NO",
+        "default": "(gen_random_uuid())::text"
+      },
+      {
+        "column": "order_number",
+        "type": "integer",
+        "nullable": "NO",
+        "default": "nextval('orders_order_number_seq'::regclass)"
+      },
+      {
+        "column": "customer_name",
+        "type": "character varying",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "status",
+        "type": "character varying",
+        "nullable": "NO",
+        "default": "'PENDING'::character varying"
+      },
+      {
+        "column": "order_json",
+        "type": "jsonb",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "created_by",
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": "now()"
+      },
+      {
+        "column": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": "now()"
+      },
+      {
+        "column": "completed_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      }
+    ],
+    "relationships": [
+      {
+        "from": "created_by",
+        "to_table": "users",
+        "to_column": "id"
+      }
+    ]
+  },
+  {
+    "table_name": "scanned_items",
+    "columns": [
+      {
+        "column": "id",
+        "type": "text",
+        "nullable": "NO",
+        "default": "(gen_random_uuid())::text"
+      },
+      {
+        "column": "session_id",
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "user_id",
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "order_id",
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "design",
+        "type": "character varying",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "lot_number",
+        "type": "character varying",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "unique_identifier",
+        "type": "character varying",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "is_processed",
+        "type": "boolean",
+        "nullable": "YES",
+        "default": "false"
+      },
+      {
+        "column": "scanned_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": "now()"
+      }
+    ],
+    "relationships": [
+      {
+        "from": "user_id",
+        "to_table": "users",
+        "to_column": "id"
+      },
+      {
+        "from": "order_id",
+        "to_table": "orders",
+        "to_column": "id"
+      }
+    ]
+  },
+  {
+    "table_name": "stock_movements",
+    "columns": [
+      {
+        "column": "id",
+        "type": "text",
+        "nullable": "NO",
+        "default": "(gen_random_uuid())::text"
+      },
+      {
+        "column": "order_id",
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "invoice_number",
+        "type": "character varying",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "design",
+        "type": "character varying",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "quantity",
+        "type": "integer",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "lot_number",
+        "type": "character varying",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "unique_identifiers",
+        "type": "jsonb",
+        "nullable": "YES",
+        "default": "'[]'::jsonb"
+      },
+      {
+        "column": "image_url",
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "movement_type",
+        "type": "character varying",
+        "nullable": "YES",
+        "default": "'OUT'::character varying"
+      },
+      {
+        "column": "status",
+        "type": "character varying",
+        "nullable": "NO",
+        "default": "'COMPLETED'::character varying"
+      },
+      {
+        "column": "session_json",
+        "type": "jsonb",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "created_by",
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": "now()"
+      }
+    ],
+    "relationships": [
+      {
+        "from": "order_id",
+        "to_table": "orders",
+        "to_column": "id"
+      },
+      {
+        "from": "created_by",
+        "to_table": "users",
+        "to_column": "id"
+      }
+    ]
+  },
+  {
+    "table_name": "users",
+    "columns": [
+      {
+        "column": "instance_id",
+        "type": "uuid",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "id",
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "email",
+        "type": "character varying",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "id",
+        "type": "uuid",
+        "nullable": "NO",
+        "default": null
+      },
+      {
+        "column": "full_name",
+        "type": "character varying",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "aud",
+        "type": "character varying",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "role",
+        "type": "character varying",
+        "nullable": "NO",
+        "default": "'user'::character varying"
+      },
+      {
+        "column": "role",
+        "type": "character varying",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "is_active",
+        "type": "boolean",
+        "nullable": "YES",
+        "default": "true"
+      },
+      {
+        "column": "email",
+        "type": "character varying",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "encrypted_password",
+        "type": "character varying",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": "now()"
+      },
+      {
+        "column": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": "now()"
+      },
+      {
+        "column": "email_confirmed_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "invited_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "last_login_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "confirmation_token",
+        "type": "character varying",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "confirmation_sent_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "recovery_token",
+        "type": "character varying",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "recovery_sent_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "email_change_token_new",
+        "type": "character varying",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "email_change",
+        "type": "character varying",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "email_change_sent_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "last_sign_in_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "raw_app_meta_data",
+        "type": "jsonb",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "raw_user_meta_data",
+        "type": "jsonb",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "is_super_admin",
+        "type": "boolean",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "phone",
+        "type": "text",
+        "nullable": "YES",
+        "default": "NULL::character varying"
+      },
+      {
+        "column": "phone_confirmed_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "phone_change",
+        "type": "text",
+        "nullable": "YES",
+        "default": "''::character varying"
+      },
+      {
+        "column": "phone_change_token",
+        "type": "character varying",
+        "nullable": "YES",
+        "default": "''::character varying"
+      },
+      {
+        "column": "phone_change_sent_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "confirmed_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "email_change_token_current",
+        "type": "character varying",
+        "nullable": "YES",
+        "default": "''::character varying"
+      },
+      {
+        "column": "email_change_confirm_status",
+        "type": "smallint",
+        "nullable": "YES",
+        "default": "0"
+      },
+      {
+        "column": "banned_until",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "reauthentication_token",
+        "type": "character varying",
+        "nullable": "YES",
+        "default": "''::character varying"
+      },
+      {
+        "column": "reauthentication_sent_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "is_sso_user",
+        "type": "boolean",
+        "nullable": "NO",
+        "default": "false"
+      },
+      {
+        "column": "deleted_at",
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      },
+      {
+        "column": "is_anonymous",
+        "type": "boolean",
+        "nullable": "NO",
+        "default": "false"
+      }
+    ],
+    "relationships": []
+  }
+]
