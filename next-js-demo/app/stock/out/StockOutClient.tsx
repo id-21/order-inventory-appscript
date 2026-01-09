@@ -606,16 +606,53 @@ export default function StockOutClient() {
                 />
               </div>
 
-              {/* Scanned Items Summary - Just count */}
-              <div>
-                <p className="text-xl font-bold text-gray-900">
-                  {scannedItems.length} items scanned across {aggregatedItems.length} design{aggregatedItems.length !== 1 ? 's' : ''}
-                </p>
+              {/* Order Items Table */}
+              {selectedOrder && selectedOrder.order_items.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-xl font-bold text-gray-900">Order Items</h4>
+                  <div className="bg-white border-2 border-gray-300 rounded-lg overflow-hidden">
+                    <table className="w-full">
+                      <thead className="bg-gray-100">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-base font-bold text-gray-700">Design</th>
+                          <th className="px-4 py-3 text-left text-base font-bold text-gray-700">Lot</th>
+                          <th className="px-4 py-3 text-right text-base font-bold text-gray-700">Qty</th>
+                          <th className="px-4 py-3 text-right text-base font-bold text-gray-700">Fulfilled</th>
+                          <th className="px-4 py-3 text-right text-base font-bold text-gray-700">Remaining</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {selectedOrder.order_items.map((item: any) => {
+                          const remaining = item.quantity - item.fulfilled_quantity;
+                          return (
+                            <tr key={item.id} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 text-lg font-medium text-gray-900">{item.design}</td>
+                              <td className="px-4 py-3 text-lg text-gray-700">{item.lot_number}</td>
+                              <td className="px-4 py-3 text-lg text-gray-900 text-right">{item.quantity}</td>
+                              <td className="px-4 py-3 text-lg text-gray-700 text-right">{item.fulfilled_quantity}</td>
+                              <td className="px-4 py-3 text-lg font-bold text-blue-900 text-right">{remaining}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Scanned Items Table */}
+              <div className="space-y-2">
+                <h4 className="text-xl font-bold text-gray-900">Scanned Items</h4>
+                <ScannedItemsTable
+                  items={aggregatedItems}
+                  onClear={handleClearSession}
+                />
               </div>
 
               {/* Image Preview - Smaller */}
               {capturedImage && (
                 <div>
+                  <h4 className="text-xl font-bold text-gray-900 mb-2">Proof of Shipment</h4>
                   <img
                     src={capturedImage}
                     alt="Proof of shipment"
