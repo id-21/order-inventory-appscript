@@ -134,7 +134,7 @@ export default function QRScanner({
       {/* Single row with camera buttons on left, scanner button on right */}
       <div className="flex gap-2 items-stretch">
         {/* Camera buttons on the left */}
-        {cameras.length > 1 && (
+        {!shouldAutostart && (
           <div className="flex gap-2">
             {cameras.map((camera) => (
               <button
@@ -158,17 +158,19 @@ export default function QRScanner({
         )}
 
         {/* Start/Stop Scanner button on the right */}
-        <button
-          onClick={handleToggleScanning}
-          disabled={!selectedCamera}
-          className={`flex-1 px-6 py-1 rounded-lg font-medium text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-            isScanning
-              ? "bg-red-500 text-white hover:bg-red-600"
-              : "bg-green-500 text-white hover:bg-green-600"
-          }`}
-        >
-          {isScanning ? "Stop Scanner" : "Start Scanner"}
-        </button>
+        {!shouldAutostart && (
+          <button
+            onClick={handleToggleScanning}
+            disabled={!selectedCamera}
+            className={`flex-1 px-6 py-1 rounded-lg font-medium text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              isScanning
+                ? "bg-red-500 text-white hover:bg-red-600"
+                : "bg-green-500 text-white hover:bg-green-600"
+            }`}
+          >
+            {isScanning ? "Stop Scanner" : "Start Scanner"}
+          </button>
+        )}
       </div>
 
       {error && (
