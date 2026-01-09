@@ -59,12 +59,17 @@ export default function QRScanner({
           qrbox: { width: 320, height: 320 },
         },
         (decodedText) => {
+          const timestamp = new Date().toISOString();
+          const timeMs = performance.now().toFixed(2);
+          console.log(`[${timestamp}] [${timeMs}ms] QR Code detected by Html5Qrcode:`, decodedText);
           if (scannerRef.current) {
             onScan(decodedText, scannerRef.current);
           }
         },
         (errorMessage) => {
           // Ignore scan errors (these happen constantly while scanning)
+          // Uncomment below to debug scanning issues:
+          // console.log("Scan error:", errorMessage);
         }
       );
 

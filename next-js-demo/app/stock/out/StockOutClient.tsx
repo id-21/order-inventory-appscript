@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { Html5Qrcode } from "html5-qrcode";
@@ -60,6 +60,9 @@ export default function StockOutClient() {
     validation: { valid: boolean; error?: string };
   }>({ qrData: null, validation: { valid: false } });
 
+  // Use ref instead of state for synchronous blocking of duplicate scans
+  const isProcessingScanRef = useRef(false);
+
   useEffect(() => {
     // Generate session ID on mount
     setSessionId(uuidv4());
@@ -98,8 +101,22 @@ export default function StockOutClient() {
   };
 
   const handleScan = async (qrCodeData: string, scanner: Html5Qrcode) => {
+    const timestamp = new Date().toISOString();
+    const timeMs = performance.now().toFixed(2);
+    console.log(`[${timestamp}] [${timeMs}ms] Scan received`);
+
+    // Prevent processing if already handling a scan (use ref for synchronous check)
+    if (isProcessingScanRef.current) {
+      console.log(`[${timestamp}] [${timeMs}ms] Already processing a scan, ignoring duplicate...`);
+      return;
+    }
+
     try {
+      // Set processing flag immediately to block duplicate callbacks (synchronous!)
+      isProcessingScanRef.current = true;
+
       // Pause scanner immediately to prevent duplicate scans
+      console.log(`[${timestamp}] [${timeMs}ms] Pausing scanner to process scan...`);
       scanner.pause();
 
       setScanError("");
@@ -155,6 +172,8 @@ export default function StockOutClient() {
     } finally {
       // Always resume scanning after processing, even if there was an error
       scanner.resume();
+      // Reset processing flag to allow next scan (synchronous!)
+      isProcessingScanRef.current = false;
     }
   };
 
