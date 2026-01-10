@@ -1,5 +1,6 @@
 import { Suspense } from "react";
-import StockOutClient from "./StockOutClient";
+// import StockOutClient from "./StockOutClient";
+import StockOutClient from "./StockOutClientRefactored";
 
 export default function StockOutPage() {
   return (
