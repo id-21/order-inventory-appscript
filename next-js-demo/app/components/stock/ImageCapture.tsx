@@ -17,12 +17,17 @@ export default function ImageCapture({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
 
-  // FIX: This waits for the video element to exist, then connects the stream
   useEffect(() => {
     if (useCamera && videoRef.current && stream) {
       videoRef.current.srcObject = stream;
     }
   }, [useCamera, stream]);
+
+  useEffect(() => {
+    if (!capturedImage) {
+      startCamera();
+    }
+  }, [capturedImage]);
 
   const startCamera = async (retryCount = 0) => {
     try {
@@ -123,41 +128,23 @@ export default function ImageCapture({
         </div>
       ) : (
         <>
-          {useCamera ? (
-            <div className="space-y-4">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className="w-full rounded-lg border-2 border-green-500"
-                style={{ minHeight: "50vh" }}
-              />
-              <div className="flex gap-3">
-                <button
-                  onClick={capturePhoto}
-                  className="flex-1 px-8 py-5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium text-2xl"
-                >
-                  Capture Photo
-                </button>
-                <button
-                  onClick={stopCamera}
-                  className="px-6 py-5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium text-xl"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
+          <div className="space-y-4">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              className="w-full rounded-lg border-2 border-green-500"
+              style={{ minHeight: "50vh" }}
+            />
+            <div className="flex gap-3">
               <button
-                onClick={() => startCamera()}
-                className="py-8 bg-blue-50 border-2 border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                onClick={capturePhoto}
+                className="flex-1 px-8 py-5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium text-2xl"
               >
-                <div className="font-medium text-blue-900 text-xl">Take Photo</div>
+                Capture Photo
               </button>
-
-              <label className="py-8 bg-green-50 border-2 border-green-200 rounded-lg hover:bg-green-100 transition-colors cursor-pointer">
-                <div className="font-medium text-green-900 text-xl">Upload from Gallery</div>
+              <label className="flex-1 px-8 py-5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer font-medium text-2xl text-center">
+                Upload from Gallery
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -167,7 +154,7 @@ export default function ImageCapture({
                 />
               </label>
             </div>
-          )}
+          </div>
 
           <canvas ref={canvasRef} className="hidden" />
         </>
