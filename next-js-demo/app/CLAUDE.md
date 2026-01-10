@@ -15,6 +15,9 @@ Next.js 15 App Router application for order fulfillment and inventory tracking. 
   - See: [stock/CLAUDE.md](stock/CLAUDE.md) for multi-step scanning workflow
 - `components/` - React components (auth UI, stock scanning, UI primitives)
   - See: [components/CLAUDE.md](components/CLAUDE.md) for reusable component patterns
+  - See: [components/stock/CLAUDE.md](components/stock/CLAUDE.md) for stock component details
+- `lib/hooks/` - Custom React hooks for workflow management
+  - See: [../lib/hooks/CLAUDE.md](../lib/hooks/CLAUDE.md) for hook patterns
 </file_map>
 
 <patterns>
@@ -25,7 +28,7 @@ Next.js 15 App Router with server/client component split:
 - Server components by default (page.tsx, layout.tsx)
 - Client components marked with `"use client"` directive
 - API routes in app/api/ using Route Handlers
-Example: `page.tsx` (server), `stock/out/StockOutClient.tsx` (client)
+Example: `page.tsx` (server), `stock/out/StockOutClientRefactored.tsx` (client)
 
 **Clerk Authentication Flow**
 Root layout wraps with ClerkProvider, all protected routes verify auth:
@@ -54,7 +57,7 @@ Entire app optimized for warehouse/mobile scanning:
 - Large touch targets (py-5, py-6 padding)
 - Text sizes: text-xl, text-2xl, text-5xl
 - Card-based navigation with color-coded sections
-Example: `page.tsx:25-39`, `stock/out/StockOutClient.tsx`
+Example: `page.tsx:25-39`, `stock/out/StockOutClientRefactored.tsx`
 
 **Child CLAUDE.md Structure**
 Each major directory has detailed CLAUDE.md:

@@ -229,3 +229,10 @@ If implementation fails:
 - [ ] Audio feedback works identically
 - [ ] Original StockOutClient.tsx preserved as backup
 - [ ] Code is more maintainable (reduced from 713 lines to ~100 line orchestrator + focused components)
+
+CLAUDE files to update: 
+app/components/CLAUDE.md -
+app/components/stock/CLAUDE.md -
+app/stock/CLAUDE.md -
+app/CLAUDE.md
+lib/CLAUDE.md -

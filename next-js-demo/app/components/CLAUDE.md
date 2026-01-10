@@ -7,11 +7,18 @@ React components for the order fulfillment and inventory scanning application. I
 - `AuthHeader.tsx` - Clerk authentication wrapper with sign-in/sign-up buttons and user profile
 - `AdminHeaderLink.tsx` - Conditional admin dashboard link (checks `/api/auth/is-admin`)
 - `stock/` - Stock management workflow components for order fulfillment
-  - `QRScanner.tsx` - Html5Qrcode wrapper for scanning QR codes with camera selection
-  - `ImageCapture.tsx` - Camera/gallery image capture for shipment photos
-  - `OrderCardSelector.tsx` - Order selection UI with bottom sheet preview
-  - `ScannedItemsTable.tsx` - Aggregated scan results display with totals
-  - `DebugScanModal.tsx` - Developer debug modal showing QR validation and type comparisons
+  - Step Components (Refactored Workflow):
+    - `SelectOrderStep.tsx` - Order selection step with OrderCardSelector integration
+    - `ScanItemsStep.tsx` - QR scanning step with scanned items table and debug modal
+    - `CaptureImageStep.tsx` - Image capture step with validation
+    - `SubmitStep.tsx` - Final submission step with review and submit
+  - Reusable Components:
+    - `QRScanner.tsx` - Html5Qrcode wrapper for scanning QR codes with camera selection
+    - `ImageCapture.tsx` - Camera/gallery image capture for shipment photos
+    - `OrderCardSelector.tsx` - Order selection UI with bottom sheet preview
+    - `ScannedItemsTable.tsx` - Aggregated scan results display with totals
+    - `DebugScanModal.tsx` - Developer debug modal showing QR validation and type comparisons
+    - `DownloadLogsButton.tsx` - Reusable session logs download button
 - `ui/` - Reusable UI primitives
   - `BottomSheet.tsx` - Mobile-friendly bottom sheet modal with slide-up animation
 </file_map>
@@ -22,6 +29,23 @@ React components for the order fulfillment and inventory scanning application. I
 **Client Components Pattern**
 All components use `"use client"` directive for interactivity (refs, state, effects).
 Example: `QRScanner.tsx`, search:`"use client"`
+
+**Step Component Pattern**
+Each workflow step is a self-contained component:
+- Accepts props for state + callbacks from orchestrator
+- Handles UI rendering for that specific step
+- Composes reusable components (QRScanner, ImageCapture, ScannedItemsTable)
+- Returns back to orchestrator via callback props
+Example: `stock/SelectOrderStep.tsx`, `stock/ScanItemsStep.tsx`, `stock/CaptureImageStep.tsx`, `stock/SubmitStep.tsx`
+
+**Callback Props Pattern**
+Step components receive orchestrator functions as props:
+- `onOrderSelect` - Handle order selection
+- `onStartScanning` - Advance to scan step
+- `onProceedToImage` - Advance to image capture
+- `onBack` - Return to previous step
+- `onSubmit` - Submit final workflow
+Example: `stock/SelectOrderStep.tsx:15-17`, `stock/ScanItemsStep.tsx:40-42`
 
 **Camera Handling Pattern**
 Camera components must properly connect MediaStream to video elements using React lifecycle:
@@ -47,10 +71,19 @@ Scanned items are aggregated by design+lot before display:
 - Reduces (sum) for total quantity
 - Shows quantity badges prominently
 Example: `ScannedItemsTable.tsx:19`
+
+**Reusable Button Components**
+Shared buttons extracted to separate components with consistent styling:
+- Accept onClick and optional disabled props
+- Use mobile-first sizing (text-lg, py-3, px-6)
+- Include appropriate icons/labels
+Example: `stock/DownloadLogsButton.tsx:8-34`
 </patterns>
 
 <critical_notes>
 ## CRITICAL NOTES
+
+- **Step Components Are Composable** - Each step component (SelectOrderStep, ScanItemsStep, CaptureImageStep, SubmitStep) is designed to be composable. Orchestrator passes state + callbacks as props. Components don't manage workflow state - they only render UI and call callbacks: `stock/SelectOrderStep.tsx:20-34`
 
 - **Camera Stream Connection Lifecycle** - CRITICAL: When video elements are conditionally rendered, you MUST use useEffect to connect the MediaStream after the element exists in DOM. Setting `videoRef.current.srcObject` directly in an async function will fail silently if called before `setUseCamera(true)` causes the element to render. See `ImageCapture.tsx:21-25` for the correct pattern.
 
@@ -59,6 +92,8 @@ Example: `ScannedItemsTable.tsx:19`
 - **Type Coercion in Validation** - QR codes may have numeric fields but order data uses strings. Always use String() coercion for comparisons. Debug modal shows type mismatches: `DebugScanModal.tsx:27-31`
 
 - **DebugScanModal Shows Session Count** - Modal now accepts `scannedItems` prop and displays real-time scan count for current session alongside database fulfilled_quantity. Helps distinguish between already-fulfilled items vs current session scans: `DebugScanModal.tsx:14`, `DebugScanModal.tsx:273-287`
+
+- **DownloadLogsButton Is Reusable** - Used across multiple steps (scan, image, submit). Accepts onClick handler + optional disabled flag. Maintains consistent styling: `stock/DownloadLogsButton.tsx:8-11`
 
 - **Admin Link Hidden** - `AdminHeaderLink` is conditionally commented out in `AuthHeader.tsx:5,16`. Uncomment when admin dashboard is ready.
 
@@ -71,6 +106,16 @@ Example: `ScannedItemsTable.tsx:19`
 
 <paved_path>
 ## PAVED PATH
+
+**Creating New Step Component**
+1. Create in `stock/` directory with `"use client"` directive
+2. Define props interface with state from orchestrator + callbacks
+3. Use large text sizes (text-xl, text-2xl) and padding (py-5, py-6) for mobile
+4. Compose existing components (QRScanner, ImageCapture, ScannedItemsTable, DownloadLogsButton)
+5. Call orchestrator callbacks for navigation (onBack, onProceedToNext)
+6. Handle loading states with spinner (see `OrderCardSelector.tsx:91-96`)
+7. Show errors in red-50 bg with red-700 text (see `QRScanner.tsx:135-138`)
+Example: `stock/SelectOrderStep.tsx`, `stock/CaptureImageStep.tsx`
 
 **Adding New Stock Workflow Component**
 1. Create in `stock/` directory with `"use client"` directive
