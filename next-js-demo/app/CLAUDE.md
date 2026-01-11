@@ -1,11 +1,12 @@
 <system_context>
-Next.js 15 App Router application for order fulfillment and inventory tracking. Uses Clerk authentication, Supabase backend, and mobile-optimized QR scanning workflow for warehouse operations. Root layout wraps entire app with ClerkProvider and persistent AuthHeader.
+Next.js 15 App Router application for order fulfillment and inventory tracking with PWA capabilities and real-time notifications. Uses Clerk authentication, Supabase backend, mobile-optimized QR scanning workflow, and Web Push for instant order alerts to warehouse staff.
 </system_context>
 
 <file_map>
 ## FILE MAP
 - `layout.tsx` - Root layout with ClerkProvider wrapper, AuthHeader navigation, Tailwind globals
-- `page.tsx` - Home page with navigation cards (Orders, Stock Out, Admin Dashboard)
+- `page.tsx` - Home page with navigation cards and NotificationWrapper for non-admin users
+- `manifest.ts` - PWA manifest configuration (installable app metadata, shortcuts)
 - `globals.css` - Tailwind CSS imports only
 - `api/` - API routes organized by domain (orders, stock, auth, admin)
   - See: [api/CLAUDE.md](api/CLAUDE.md) for comprehensive API patterns and endpoints
@@ -13,9 +14,11 @@ Next.js 15 App Router application for order fulfillment and inventory tracking. 
   - See: [orders/CLAUDE.md](orders/CLAUDE.md) for order workflow patterns
 - `stock/` - Stock movement pages (scan-based fulfillment, history)
   - See: [stock/CLAUDE.md](stock/CLAUDE.md) for multi-step scanning workflow
-- `components/` - React components (auth UI, stock scanning, UI primitives)
-  - See: [components/CLAUDE.md](components/CLAUDE.md) for reusable component patterns
+- `components/` - React components (auth, stock, notifications, UI primitives)
+  - See: [components/CLAUDE.md](components/CLAUDE.md) for component patterns including PWA notifications
   - See: [components/stock/CLAUDE.md](components/stock/CLAUDE.md) for stock component details
+- `actions/` - Server actions for push notifications
+  - `push-notifications.ts` - Web Push subscription management, broadcast to users
 - `lib/hooks/` - Custom React hooks for workflow management
   - See: [../lib/hooks/CLAUDE.md](../lib/hooks/CLAUDE.md) for hook patterns
 </file_map>
@@ -59,6 +62,14 @@ Entire app optimized for warehouse/mobile scanning:
 - Card-based navigation with color-coded sections
 Example: `page.tsx:25-39`, `stock/out/StockOutClientRefactored.tsx`
 
+**PWA Notification System**
+Dual notification strategy for warehouse staff (non-admin users only):
+- Supabase Realtime: In-app WebSocket notifications when app is open
+- Web Push: Background OS notifications when app is closed
+- NotificationWrapper orchestrates both systems, conditionally rendered
+- Admin users (order creators) don't receive notifications
+Example: `page.tsx:27`, `components/NotificationWrapper.tsx:17-19`
+
 **Child CLAUDE.md Structure**
 Each major directory has detailed CLAUDE.md:
 - Parent (this file): High-level overview, points to children
@@ -86,6 +97,10 @@ Each major directory has detailed CLAUDE.md:
 - **Single Global CSS** - Only Tailwind imports in globals.css. All styling via utility classes. No custom CSS variables or themes defined: `globals.css:1`
 
 - **Supabase Admin Check** - Home page uses supabase-admin.ts getUserById() which bypasses RLS. Ensure this only runs server-side: `page.tsx:11`
+
+- **Notification System HTTPS Only** - PWA and Web Push require HTTPS. Service worker registration fails on HTTP. Use localhost or deployed HTTPS for testing: `components/PushNotificationManager.tsx`
+
+- **NotificationWrapper Conditional** - Only rendered for non-admin users to prevent admins receiving notifications for orders they create. Check logic before modifying: `page.tsx:27`, `components/NotificationWrapper.tsx:17`
 </critical_notes>
 
 <paved_path>

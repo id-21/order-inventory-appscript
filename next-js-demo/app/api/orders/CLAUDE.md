@@ -1,5 +1,5 @@
 <system_context>
-API routes for order management operations. Handles order creation with validation, order list retrieval with filtering, and next order number preview for order creation form.
+API routes for order management operations. Handles order creation with validation and real-time notification broadcast, order list retrieval with filtering, and next order number preview for order creation form.
 </system_context>
 
 <file_map>
@@ -56,6 +56,15 @@ next-id endpoint returns preview for UI display:
 - Actual order number generated server-side on POST
 - Don't trust client-provided order number
 Example: `next-id/route.ts:17-19`
+
+**Notification Broadcast Pattern**
+POST route triggers push notifications after successful order creation:
+- Order created and saved to database first
+- Then calls broadcastToNonAdmins() from push-notifications server action
+- Sends push notifications to all warehouse staff (non-admin users)
+- Supabase Realtime also broadcasts automatically via database replication
+- Dual notification: Push (background) + Realtime (in-app)
+Example: `route.ts:4`, `route.ts:111-116`
 </patterns>
 
 <critical_notes>
@@ -76,6 +85,10 @@ Example: `next-id/route.ts:17-19`
 - **Validation Duplication** - Server-side validation duplicates client-side validation in new order form. Keep in sync or extract to shared schema (e.g., Zod): `route.ts:57-92` vs `app/orders/new/page.tsx:66-89`
 
 - **Order Number Not in Response** - GET returns orders but order_number is in database schema. Ensure it's included in response for UI display: `route.ts:32`
+
+- **Notification Broadcast is Non-Blocking** - broadcastToNonAdmins() called after order creation. If push notification fails, order still succeeds (notifications are best-effort, not critical path): `route.ts:111-116`
+
+- **Dual Notification System** - Orders trigger both push notifications (manual call) AND Supabase Realtime (automatic database replication). Don't remove either - push works when app is closed, realtime works when app is open: `route.ts:111-116`
 </critical_notes>
 
 <paved_path>

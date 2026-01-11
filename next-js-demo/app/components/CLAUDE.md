@@ -1,11 +1,16 @@
 <system_context>
-React components for the order fulfillment and inventory scanning application. Includes authentication UI, stock management components (QR scanning, image capture, order selection), and reusable UI primitives.
+React components for the order fulfillment and inventory scanning application. Includes authentication UI, stock management components (QR scanning, image capture, order selection), PWA notification system, and reusable UI primitives.
 </system_context>
 
 <file_map>
 ## FILE MAP
 - `AuthHeader.tsx` - Clerk authentication wrapper with sign-in/sign-up buttons and user profile
 - `AdminHeaderLink.tsx` - Conditional admin dashboard link (checks `/api/auth/is-admin`)
+- **Notification Components** (PWA + Real-Time):
+  - `NotificationWrapper.tsx` - Orchestrates notification system, conditionally shown to non-admin users
+  - `PushNotificationManager.tsx` - Web Push subscription UI, service worker registration
+  - `OrderNotificationListener.tsx` - Supabase Realtime listener for in-app order notifications
+  - `InstallPrompt.tsx` - PWA install prompt (beforeinstallprompt event handling)
 - `stock/` - Stock management workflow components for order fulfillment
   - Step Components (Refactored Workflow):
     - `SelectOrderStep.tsx` - Order selection step with OrderCardSelector integration
@@ -78,6 +83,30 @@ Shared buttons extracted to separate components with consistent styling:
 - Use mobile-first sizing (text-lg, py-3, px-6)
 - Include appropriate icons/labels
 Example: `stock/DownloadLogsButton.tsx:8-34`
+
+**Notification Orchestration Pattern**
+NotificationWrapper conditionally renders notification features:
+- Early return if user is admin (admins don't receive their own order notifications)
+- Renders OrderNotificationListener for real-time WebSocket updates
+- Renders InstallPrompt + PushNotificationManager UI for PWA setup
+- All notification components are client components ("use client")
+Example: `NotificationWrapper.tsx:17-30`
+
+**Service Worker Registration Pattern**
+PushNotificationManager handles browser push subscription:
+- Registers service worker from public/sw.js on mount
+- Requests notification permission before subscription
+- Converts VAPID public key from base64 to Uint8Array
+- Saves subscription to Supabase via server action
+Example: `PushNotificationManager.tsx:287-298`, `PushNotificationManager.tsx:300-328`
+
+**Supabase Realtime Channel Pattern**
+OrderNotificationListener subscribes to database changes:
+- Creates channel for 'orders' table INSERT events
+- Shows browser notification (if permission granted)
+- Shows in-app toast notification
+- Cleanup removes channel on unmount
+Example: `OrderNotificationListener.tsx:696-741`
 </patterns>
 
 <critical_notes>
@@ -102,6 +131,16 @@ Example: `stock/DownloadLogsButton.tsx:8-34`
 - **Bottom Sheet Fixed Height** - Bottom sheets use fixed 50vh min/max height with internal scroll. Don't exceed this or content may be cut off: `BottomSheet.tsx:40-50`
 
 - **Html5Qrcode Singleton** - QRScanner must stop() and clear() existing instance before creating new one, otherwise "scanner already running" error: `QRScanner.tsx:80-82`
+
+- **HTTPS Required for PWA** - Service worker registration and push notifications only work on HTTPS or localhost. Test on deployed site or use `npm run dev -- --experimental-https`: `PushNotificationManager.tsx:289`
+
+- **VAPID Key Conversion** - Public VAPID key must be converted from base64 to Uint8Array before subscription. Helper function urlBase64ToUint8Array handles this: `PushNotificationManager.tsx:263-273`, `PushNotificationManager.tsx:313-314`
+
+- **Notification Permission Timing** - Request permission only when user clicks "Enable Notifications", not on page load. Improves UX and permission grant rate: `PushNotificationManager.tsx:304`
+
+- **Realtime Subscription Cleanup** - MUST call supabase.removeChannel() in useEffect cleanup to prevent memory leaks and duplicate subscriptions: `OrderNotificationListener.tsx:744-747`
+
+- **NotificationWrapper Admin Check** - Wrapper returns null for admin users to prevent them receiving notifications for orders they create. Don't modify this logic without updating home page: `NotificationWrapper.tsx:17-19`
 </critical_notes>
 
 <paved_path>
