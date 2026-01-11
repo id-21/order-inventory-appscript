@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { getUserById } from "@/lib/supabase-admin";
 import Link from "next/link";
+import { NotificationWrapper } from "./components/NotificationWrapper";
 
 export default async function Home() {
   const { userId } = await auth();
@@ -21,14 +22,18 @@ export default async function Home() {
         </p>
 
         {userId ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Link
-              href="/orders"
-              className="block p-8 bg-blue-50 border-2 border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
-            >
-              <h2 className="text-2xl font-bold mb-2">📦 Orders</h2>
-              <p className="text-gray-600">Create and manage customer orders</p>
-            </Link>
+          <>
+            {/* Notification features for non-admin users */}
+            <NotificationWrapper isAdmin={isAdmin} />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Link
+                href="/orders"
+                className="block p-8 bg-blue-50 border-2 border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                <h2 className="text-2xl font-bold mb-2">📦 Orders</h2>
+                <p className="text-gray-600">Create and manage customer orders</p>
+              </Link>
 
             <Link
               href="/stock/out"
@@ -38,16 +43,17 @@ export default async function Home() {
               <p className="text-gray-600">Scan and track inventory outflow</p>
             </Link>
 
-            {isAdmin && (
-              <Link
-                href="/admin/dashboard"
-                className="block p-8 bg-purple-50 border-2 border-purple-200 rounded-lg hover:bg-purple-100 transition-colors md:col-span-2"
-              >
-                <h2 className="text-2xl font-bold mb-2">👨‍💼 Admin Dashboard</h2>
-                <p className="text-gray-600">Manage users, orders, and view reports</p>
-              </Link>
-            )}
-          </div>
+              {isAdmin && (
+                <Link
+                  href="/admin/dashboard"
+                  className="block p-8 bg-purple-50 border-2 border-purple-200 rounded-lg hover:bg-purple-100 transition-colors md:col-span-2"
+                >
+                  <h2 className="text-2xl font-bold mb-2">👨‍💼 Admin Dashboard</h2>
+                  <p className="text-gray-600">Manage users, orders, and view reports</p>
+                </Link>
+              )}
+            </div>
+          </>
         ) : (
           <div className="text-center py-12">
             <p className="text-lg text-gray-600 mb-6">Please sign in to access the system</p>

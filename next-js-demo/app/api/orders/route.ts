@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { createOrder, getOrders } from "@/lib/features/supabase-orders";
+import { broadcastToNonAdmins } from "@/app/actions/push-notifications";
 
 /**
  * GET /api/orders
@@ -97,6 +98,18 @@ export async function POST(request: NextRequest) {
       },
       userId
     );
+
+    // Send push notifications to all non-admin users
+    // This runs async in the background, doesn't block the response
+    broadcastToNonAdmins({
+      title: 'New Order Created',
+      body: `Order #${order.order_number} for ${customerName} needs fulfillment`,
+      url: `/stock/out?order=${order.order_number}`,
+      orderId: order.id,
+    }).catch((error) => {
+      // Log error but don't fail the request
+      console.error('[POST /api/orders] Failed to send notifications:', error);
+    });
 
     return NextResponse.json(
       {

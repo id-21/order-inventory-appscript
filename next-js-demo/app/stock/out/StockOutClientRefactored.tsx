@@ -165,11 +165,7 @@ export default function StockOutClientRefactored() {
 
       // Reset and redirect after success
       setTimeout(() => {
-        if (selectedOrder) {
-          router.push("/orders");
-        } else {
-          router.push("/stock/history");
-        }
+        router.push("/orders");
       }, 2000);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Failed to submit";
